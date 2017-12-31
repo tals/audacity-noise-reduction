@@ -32,6 +32,7 @@ enum WindowTypes {
     WT_DEFAULT_WINDOW_TYPES = WT_HANN_HANN
 };
 
+static const double DEFAULT_OLD_SENSITIVITY = 0.0;
 
 const struct WindowTypesInfo {
     const char* name;
@@ -862,3 +863,26 @@ bool EffectNoiseReductionWorker::ProcessOne(Statistics &statistics, SndContext& 
 }
 
 
+
+NoiseReduction::NoiseReduction(NoiseReduction::Settings& settings, SndContext& ctx):
+    mWorker(new EffectNoiseReductionWorker(settings, ctx.info.samplerate)) {
+}
+
+void NoiseReduction::Process() {
+}
+
+NoiseReduction::Settings::Settings() {
+
+    mWindowTypes = WT_DEFAULT_WINDOW_TYPES;
+    mWindowSizeChoice = DEFAULT_WINDOW_SIZE_CHOICE;
+    mStepsPerWindowChoice = DEFAULT_STEPS_PER_WINDOW_CHOICE;
+    mMethod = DM_DEFAULT_METHOD;
+    mOldSensitivity = DEFAULT_OLD_SENSITIVITY;
+    mNoiseReductionChoice = NRC_ISOLATE_NOISE;
+
+    mNewSensitivity = 6.0;
+    mNoiseGain = 12.0;
+    mAttackTime = 0.02;
+    mReleaseTime = 0.10;
+    mFreqSmoothingBands = 3.0;
+}

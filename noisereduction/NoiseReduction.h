@@ -1,6 +1,6 @@
 #pragma once
 #include <sndfile.h>
-
+#include <memory>
 #define DB_TO_LINEAR(x) (pow(10.0, (x) / 20.0))
 #define LINEAR_TO_DB(x) (20.0 * log10(x))
 
@@ -11,9 +11,13 @@ struct SndContext {
     SF_INFO info;
 };
 
+class EffectNoiseReductionWorker;
 class NoiseReduction {
+    std::auto_ptr<EffectNoiseReductionWorker> mWorker;
 public:
     struct Settings {
+        Settings();
+
         size_t WindowSize() const { return 1u << (3 + mWindowSizeChoice); }
         unsigned StepsPerWindow() const { return 1u << (1 + mStepsPerWindowChoice); }
         bool       mDoProfile;
@@ -35,4 +39,8 @@ public:
         int        mStepsPerWindowChoice;
         int        mMethod;
     };
+
+    NoiseReduction(NoiseReduction::Settings& settings, SndContext& ctx);
+    ~NoiseReduction() {};
+    void Process();
 };

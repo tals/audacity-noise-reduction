@@ -18,8 +18,13 @@ int main(int argc, const char * argv[]) {
     // insert code here...
     SF_INFO info = { 0 };
     SNDFILE* snd = sf_open("/tmp/dtmf.wav", SFM_READ, &info);
-    
+    SndContext ctx = {
+        .file = snd,
+        .info = info,
+    };
 
+    NoiseReduction::Settings settings;
+    NoiseReduction reduction(settings, ctx);
 //    RealFFTf(nullptr, nullptr);
     std::cout << "Hello, World!\n";
     return 0;

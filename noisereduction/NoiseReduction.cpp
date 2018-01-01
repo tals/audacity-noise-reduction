@@ -81,7 +81,6 @@ struct OutputTrack {
     }
 };
 
-
 class Statistics
 {
 public:
@@ -116,23 +115,23 @@ public:
 };
 
 // This object holds information needed only during effect calculation
-class EffectNoiseReductionWorker
+class NoiseReductionWorker
 {
 public:
     typedef NoiseReduction::Settings Settings;
     typedef Statistics Statistics;
 
-    EffectNoiseReductionWorker(const NoiseReduction::Settings &settings, double sampleRate
+    NoiseReductionWorker(const NoiseReduction::Settings &settings, double sampleRate
 #ifdef EXPERIMENTAL_SPECTRAL_EDITING
                                , double f0, double f1
 #endif
     );
-    EffectNoiseReductionWorker();
+    NoiseReductionWorker();
 
-    bool Process(SndContext& ctx, Statistics& statistics);
+    bool Process(SndContext& ctx, Statistics& statistics, int t0, int t1);
 
 private:
-    bool ProcessOne(Statistics &statistics, SndContext& ctx, int channel,  OutputTrack& outputTrack);
+    bool ProcessOne(Statistics &statistics, SndContext& ctx, int t0, int t1, int channel, OutputTrack& outputTrack);
 
     void StartNewTrack();
     void ProcessSamples(Statistics &statistics,
@@ -209,18 +208,18 @@ private:
 
 
 
-bool EffectNoiseReductionWorker::Process(SndContext& ctx, Statistics& statistics)
+bool NoiseReductionWorker::Process(SndContext& ctx, Statistics& statistics, int t0, int t1)
 {
     for (int i = 0; i < ctx.info.channels; i++) {
         OutputTrack track(i);
-        if (!ProcessOne(statistics, ctx, i, track)) {
+        if (!ProcessOne(statistics, ctx, i, t0, t1, track)) {
             return false;
         }
     }
 
     if (mDoProfile) {
         if (statistics.mTotalWindows == 0) {
-            //            LOG_F(ERROR, "Selected noise profile is too short.");
+            LOG_F(ERROR, "Selected noise profile is too short.");
             return false;
         }
     }
@@ -228,7 +227,7 @@ bool EffectNoiseReductionWorker::Process(SndContext& ctx, Statistics& statistics
     return true;
 }
 
-void EffectNoiseReductionWorker::ApplyFreqSmoothing(FloatVector &gains)
+void NoiseReductionWorker::ApplyFreqSmoothing(FloatVector &gains)
 {
     // Given an array of gain mutipliers, average them
     // GEOMETRICALLY.  Don't multiply and take nth root --
@@ -258,7 +257,7 @@ void EffectNoiseReductionWorker::ApplyFreqSmoothing(FloatVector &gains)
         gains[ii] = exp(mFreqSmoothingScratch[ii]);
 }
 
-EffectNoiseReductionWorker::EffectNoiseReductionWorker
+NoiseReductionWorker::NoiseReductionWorker
 (const NoiseReduction::Settings &settings, double sampleRate
 #ifdef EXPERIMENTAL_SPECTRAL_EDITING
  , double f0, double f1
@@ -404,7 +403,7 @@ EffectNoiseReductionWorker::EffectNoiseReductionWorker
     }
 }
 
-void EffectNoiseReductionWorker::StartNewTrack()
+void NoiseReductionWorker::StartNewTrack()
 {
     float *pFill;
     for(unsigned ii = 0; ii < mHistoryLen; ++ii) {
@@ -451,7 +450,7 @@ void EffectNoiseReductionWorker::StartNewTrack()
     mInSampleCount = 0;
 }
 
-void EffectNoiseReductionWorker::ProcessSamples
+void NoiseReductionWorker::ProcessSamples
 (Statistics &statistics, float *buffer, size_t len, OutputTrack& outputTrack)
 {
     while (len && mOutStepCount * mStepSize < mInSampleCount) {
@@ -478,7 +477,7 @@ void EffectNoiseReductionWorker::ProcessSamples
     }
 }
 
-void EffectNoiseReductionWorker::FillFirstHistoryWindow()
+void NoiseReductionWorker::FillFirstHistoryWindow()
 {
     // Transform samples to frequency domain, windowed as needed
     if (mInWindow.size() > 0)
@@ -523,12 +522,12 @@ void EffectNoiseReductionWorker::FillFirstHistoryWindow()
     }
 }
 
-void EffectNoiseReductionWorker::RotateHistoryWindows()
+void NoiseReductionWorker::RotateHistoryWindows()
 {
     std::rotate(mQueue.begin(), mQueue.end() - 1, mQueue.end());
 }
 
-void EffectNoiseReductionWorker::FinishTrackStatistics(Statistics &statistics)
+void NoiseReductionWorker::FinishTrackStatistics(Statistics &statistics)
 {
     const int windows = statistics.mTrackWindows;
     const int multiplier = statistics.mTotalWindows;
@@ -549,7 +548,7 @@ void EffectNoiseReductionWorker::FinishTrackStatistics(Statistics &statistics)
     statistics.mTotalWindows = denom;
 }
 
-void EffectNoiseReductionWorker::FinishTrack
+void NoiseReductionWorker::FinishTrack
 (Statistics &statistics, OutputTrack& outputTrack)
 {
     // Keep flushing empty input buffers through the history
@@ -566,7 +565,7 @@ void EffectNoiseReductionWorker::FinishTrack
     }
 }
 
-void EffectNoiseReductionWorker::GatherStatistics(Statistics &statistics)
+void NoiseReductionWorker::GatherStatistics(Statistics &statistics)
 {
     ++statistics.mTrackWindows;
 
@@ -604,7 +603,7 @@ void EffectNoiseReductionWorker::GatherStatistics(Statistics &statistics)
 // Return true iff the given band of the "center" window looks like noise.
 // Examine the band in a few neighboring windows to decide.
 inline
-bool EffectNoiseReductionWorker::Classify(const Statistics &statistics, int band)
+bool NoiseReductionWorker::Classify(const Statistics &statistics, int band)
 {
     switch (mMethod) {
 #ifdef OLD_METHOD_AVAILABLE
@@ -672,7 +671,7 @@ bool EffectNoiseReductionWorker::Classify(const Statistics &statistics, int band
     }
 }
 
-void EffectNoiseReductionWorker::ReduceNoise
+void NoiseReductionWorker::ReduceNoise
 (const Statistics &statistics, OutputTrack& outputTrack)
 {
     // Raise the gain for elements in the center of the sliding history
@@ -819,7 +818,7 @@ void EffectNoiseReductionWorker::ReduceNoise
     }
 }
 
-bool EffectNoiseReductionWorker::ProcessOne(Statistics &statistics, SndContext& ctx, int channel, OutputTrack& outputTrack)
+bool NoiseReductionWorker::ProcessOne(Statistics &statistics, SndContext& ctx, int t0, int t1, int channel, OutputTrack& outputTrack)
 {
     /**
      * Frames coming from libsndfile are striped, chanel-wise: [{left, right},  {left, right}, ...]
@@ -827,10 +826,20 @@ bool EffectNoiseReductionWorker::ProcessOne(Statistics &statistics, SndContext& 
      */
     StartNewTrack();
 
-    const sf_count_t BUFFER_SIZE = 16;
-    const sf_count_t STEP_SIZE = BUFFER_SIZE * ctx.info.channels;
+    const sf_count_t BUFFER_SIZE = 500000; // 2mb
     FloatVector buffer(BUFFER_SIZE);
+
+    const sf_count_t STEP_SIZE = BUFFER_SIZE * ctx.info.channels;
+
     bool bLoopSuccess = true;
+
+    // todo: introduce time
+    // pull this out to a separate InputTrack class
+    // 1. align libsnd ptr such that the first read will start on our channel
+    //    essentially seek/sf_read_float() channelIndex times
+    // 2. while needToRead
+    // 2.1.   read sample
+    // 2.2.   seek channelCount samples forward
     for (int i = 0; i < ctx.info.frames && bLoopSuccess; i += STEP_SIZE) {
         auto lenToParse = std::min(STEP_SIZE, (ctx.info.frames - i));
         auto len = lenToParse / ctx.info.channels;
@@ -843,7 +852,8 @@ bool EffectNoiseReductionWorker::ProcessOne(Statistics &statistics, SndContext& 
                 sf_read_float(ctx.file, &buffer[j / ctx.info.channels], 1);
             }
         }
-
+        
+        mInSampleCount += len;
         ProcessSamples(statistics, &buffer[0], len, outputTrack);
     }
 
@@ -864,11 +874,20 @@ bool EffectNoiseReductionWorker::ProcessOne(Statistics &statistics, SndContext& 
 
 
 
-NoiseReduction::NoiseReduction(NoiseReduction::Settings& settings, SndContext& ctx):
-    mWorker(new EffectNoiseReductionWorker(settings, ctx.info.samplerate)) {
+NoiseReduction::NoiseReduction(NoiseReduction::Settings& settings, SndContext& ctx) :
+    mSettings(settings),
+    mCtx(ctx)
+{
+    size_t spectrumSize = 1 + mSettings.WindowSize() / 2;
+    mStatistics.reset(new Statistics(spectrumSize, mCtx.info.samplerate, mSettings.mWindowTypes));
 }
 
 void NoiseReduction::Process() {
+    NoiseReduction::Settings profileSettings(mSettings);
+    profileSettings.mDoProfile = true;
+    NoiseReductionWorker profileWorker(profileSettings, mCtx.info.samplerate);
+
+    profileWorker.Process(mCtx, *mStatistics, 0, mCtx.info.frames / 2);
 }
 
 NoiseReduction::Settings::Settings() {

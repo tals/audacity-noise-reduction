@@ -25,6 +25,8 @@ int main(int argc, const char * argv[]) {
 
     NoiseReduction::Settings settings;
     NoiseReduction reduction(settings, ctx);
+    reduction.Process();
+    
 //    RealFFTf(nullptr, nullptr);
     std::cout << "Hello, World!\n";
     return 0;

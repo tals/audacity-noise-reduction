@@ -11,9 +11,9 @@ struct SndContext {
     SF_INFO info;
 };
 
-class EffectNoiseReductionWorker;
+class NoiseReductionWorker;
+class Statistics;
 class NoiseReduction {
-    std::auto_ptr<EffectNoiseReductionWorker> mWorker;
 public:
     struct Settings {
         Settings();
@@ -43,4 +43,9 @@ public:
     NoiseReduction(NoiseReduction::Settings& settings, SndContext& ctx);
     ~NoiseReduction() {};
     void Process();
+private:
+    std::auto_ptr<Statistics> mStatistics;
+    NoiseReduction::Settings mSettings;
+    SndContext& mCtx;
+
 };

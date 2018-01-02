@@ -915,22 +915,6 @@ NoiseReduction::NoiseReduction(NoiseReduction::Settings& settings, SndContext& c
 {
     size_t spectrumSize = 1 + mSettings.WindowSize() / 2;
     mStatistics.reset(new Statistics(spectrumSize, mCtx.info.samplerate, mSettings.mWindowTypes));
-
-    mSettings.mNoiseGain = 39;
-    mSettings.mDoProfile = false;
-    mSettings.mNewSensitivity = 16;
-    mSettings.mFreqSmoothingBands = 0;
-    mSettings.mNoiseGain = 39;
-    mSettings.mAttackTime = 0.02;
-    mSettings.mReleaseTime = 0.10000000000000001;
-    mSettings.mOldSensitivity = 0;
-    mSettings.mNoiseReductionChoice = 0;
-    mSettings.mWindowTypes = 2;
-    mSettings.mWindowSizeChoice = 8;
-    mSettings.mStepsPerWindowChoice = 1;
-    mSettings.mMethod = 1;
-
-
 }
 
 bool NoiseReduction::ProfileNoise(size_t t0, size_t t1) {
@@ -979,11 +963,11 @@ bool NoiseReduction::ReduceNoise(size_t t0, size_t t1) {
         .format = OUTPUT_FORMAT,
         .samplerate = mCtx.info.samplerate,
     };
-    
+
     auto filename = "/tmp/foo.wav";
     SNDFILE* sf = sf_open(filename, SFM_WRITE, &info);
-    
-    
+
+
     for (int i = 0; i < outputs[0].length; i++) {
         float buffer[mCtx.info.channels];
         for (int currentChannel = 0; currentChannel < channels; currentChannel++) {
@@ -1000,6 +984,7 @@ bool NoiseReduction::ReduceNoise(size_t t0, size_t t1) {
 
 
 NoiseReduction::Settings::Settings() {
+    mDoProfile = false;
 
     mWindowTypes = WT_DEFAULT_WINDOW_TYPES;
     mWindowSizeChoice = DEFAULT_WINDOW_SIZE_CHOICE;
@@ -1012,5 +997,7 @@ NoiseReduction::Settings::Settings() {
     mNoiseGain = 12.0;
     mAttackTime = 0.02;
     mReleaseTime = 0.10;
-    mFreqSmoothingBands = 3.0;
+    mFreqSmoothingBands = 0;
+
+
 }

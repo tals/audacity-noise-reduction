@@ -24,6 +24,12 @@ int main(int argc, const char * argv[]) {
         .info = info,
     };
     NoiseReduction::Settings settings;
+
+    // test settings
+    settings.mNewSensitivity = 16;
+    settings.mFreqSmoothingBands = 0;
+    settings.mNoiseGain = 39;
+
     NoiseReduction reduction(settings, ctx);
     reduction.ProfileNoise(3400, 6000);
     reduction.ReduceNoise();

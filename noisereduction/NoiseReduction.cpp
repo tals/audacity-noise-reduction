@@ -47,11 +47,9 @@ const struct WindowTypesInfo {
     // In all of these cases (but the last), the constant term of the product of windows
     // is the product of the windows' two constant terms,
     // plus one half the product of the first cosine coefficients.
-
-    // Experimental only, don't need translations
     { "none, Hann (2.0.6 behavior)",    2, { 1, 0, 0 },            { 0.5, -0.5, 0 }, 0.5 },
     { "Hann, none",                     2, { 0.5, -0.5, 0 },       { 1, 0, 0 },      0.5 },
-    { "Hann, Hann (default",           4, { 0.5, -0.5, 0 },       { 0.5, -0.5, 0 }, 0.375 },
+    { "Hann, Hann (default)",           4, { 0.5, -0.5, 0 },       { 0.5, -0.5, 0 }, 0.375 },
     { "Blackman, Hann",                 4, { 0.42, -0.5, 0.08 },   { 0.5, -0.5, 0 }, 0.335 },
     { "Hamming, none",                  2, { 0.54, -0.46, 0.0 },   { 1, 0, 0 },      0.54 },
     { "Hamming, Hann",                  4, { 0.54, -0.46, 0.0 },   { 0.5, -0.5, 0 }, 0.385 },
@@ -84,7 +82,7 @@ struct OutputTrack {
 
     void Append(float* buffer, size_t count) {
         length += count;
-        LOG_F(1, "[Channel %d] Appending %zd samples (%zd total)", this->channel, count, this->length);
+        LOG_F(9, "[Channel %d] Appending %zd samples (%zd total)", this->channel, count, this->length);
         data.insert(data.end(), buffer, &buffer[count]);
     }
 
@@ -918,6 +916,8 @@ NoiseReduction::NoiseReduction(NoiseReduction::Settings& settings, SndContext& c
 }
 
 void NoiseReduction::ProfileNoise(size_t t0, size_t t1) {
+    LOG_SCOPE_F(INFO, "Profiling noise for {%zd, %zd}", t0, t1);
+
     NoiseReduction::Settings profileSettings(mSettings);
     profileSettings.mDoProfile = true;
     NoiseReductionWorker profileWorker(profileSettings, mCtx.info.samplerate);
@@ -933,6 +933,8 @@ void NoiseReduction::ProfileNoise(size_t t0, size_t t1) {
         LOG_F(ERROR, "Selected noise profile is too short.");
         throw std::invalid_argument("Selected noise profile is too short.");
     }
+
+    LOG_F(INFO, "Total Windows: %zd", mStatistics->mTotalWindows);
 }
 
 void NoiseReduction::ReduceNoise(const char* outputPath) {
@@ -941,18 +943,26 @@ void NoiseReduction::ReduceNoise(const char* outputPath) {
 }
 
 void NoiseReduction::ReduceNoise(const char* outputPath, size_t t0, size_t t1) {
+    LOG_SCOPE_F(INFO, "Reducing noise for {%zd, %zd}", t0, t1);
     NoiseReduction::Settings cleanSettings(mSettings);
     cleanSettings.mDoProfile = false;
     NoiseReductionWorker cleanWorker(cleanSettings, mCtx.info.samplerate);
 
+    // process all channels
     std::vector<OutputTrack> outputs;
     for (int i = 0; i < this->mCtx.info.channels; i++) {
+        LOG_F(INFO, "Denoising channel %d", i);
+
+        // create IO tracks
         InputTrack inputTrack(this->mCtx, i, t0, t1);
         outputs.emplace_back(i, this->mCtx.info.samplerate);
+
+        // process channel
         if (!cleanWorker.ProcessOne(*this->mStatistics, inputTrack, &outputs.back())) {
             throw std::runtime_error("Cannot process channel");
         }
     }
+
 
     // write samples
     auto channels = mCtx.info.channels;
@@ -967,20 +977,23 @@ void NoiseReduction::ReduceNoise(const char* outputPath, size_t t0, size_t t1) {
         throw std::runtime_error("Cannot open output file");
     }
 
-    for (int i = 0; i < outputs[0].length; i++) {
+    auto frameCount = outputs[0].length;
+    LOG_F(INFO, "Writing %zd frames to disk", frameCount);
+
+    for (int i = 0; i < frameCount; i++) {
+        // create frame
         float buffer[mCtx.info.channels];
         for (int currentChannel = 0; currentChannel < channels; currentChannel++) {
             buffer[currentChannel] = outputs[currentChannel].data[i];
         }
 
+        // write frame
         sf_count_t written = sf_writef_float(sf, buffer, 1);
         assert(written > 0);
     }
 
     sf_close(sf);
 }
-
-
 
 NoiseReduction::Settings::Settings() {
     mDoProfile = false;

@@ -2,10 +2,10 @@
 #include <math.h>
 #include <assert.h>
 #include <sndfile.h>
+#include <exception>
 #include "loguru.hpp"
 #include "NoiseReduction.h"
 #include "RealFFTf.h"
-
 #include "Types.h"
 
 const auto OUTPUT_FORMAT = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
@@ -88,6 +88,11 @@ struct OutputTrack {
         data.insert(data.end(), buffer, &buffer[count]);
     }
 
+    void SetEnd(size_t newLength) {
+        assert(newLength <= this->length);
+        this->length = newLength;
+    }
+
     void WriteToDisk(const char *filename) {
         // When opening a file for write, the caller must fill in structure members samplerate, channels, and format.
         SF_INFO info = {
@@ -97,7 +102,7 @@ struct OutputTrack {
          };
         SNDFILE* sf = sf_open(filename, SFM_WRITE, &info);
         assert(sf);
-        sf_count_t written = sf_write_float(sf, &data[0], data.size());
+        sf_count_t written = sf_write_float(sf, &data[0], this->length);
         assert(written > 0);
         sf_close(sf);
     }
@@ -922,10 +927,10 @@ bool NoiseReductionWorker::ProcessOne(Statistics &statistics, InputTrack& inputT
             FinishTrack(statistics, outputTrack);
     }
 
-    // if (bLoopSuccess && !mDoProfile) {
-    //     // Flush the output WaveTrack (since it's buffered)
-    //     outputTrack.Flush();
-    // }
+   if (bLoopSuccess && !mDoProfile) {
+      // Filtering effects always end up with more data than they started with.  Delete this 'tail'.
+       outputTrack.SetEnd(inputTrack.length());
+   }
 
     return bLoopSuccess;
 }

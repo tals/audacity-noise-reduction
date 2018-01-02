@@ -917,7 +917,7 @@ NoiseReduction::NoiseReduction(NoiseReduction::Settings& settings, SndContext& c
     mStatistics.reset(new Statistics(spectrumSize, mCtx.info.samplerate, mSettings.mWindowTypes));
 }
 
-bool NoiseReduction::ProfileNoise(size_t t0, size_t t1) {
+void NoiseReduction::ProfileNoise(size_t t0, size_t t1) {
     NoiseReduction::Settings profileSettings(mSettings);
     profileSettings.mDoProfile = true;
     NoiseReductionWorker profileWorker(profileSettings, mCtx.info.samplerate);
@@ -925,24 +925,22 @@ bool NoiseReduction::ProfileNoise(size_t t0, size_t t1) {
     for (int i = 0; i < this->mCtx.info.channels; i++) {
         InputTrack inputTrack(this->mCtx, i, t0, t1);
         if (!profileWorker.ProcessOne(*this->mStatistics, inputTrack, nullptr)) {
-            return false;
+            throw std::runtime_error("Cannot process channel");
         }
     }
 
     if (this->mStatistics->mTotalWindows == 0) {
         LOG_F(ERROR, "Selected noise profile is too short.");
-        return false;
+        throw std::invalid_argument("Selected noise profile is too short.");
     }
-
-    return true;
 }
 
-bool NoiseReduction::ReduceNoise() {
-    return this->ReduceNoise(0, (size_t)mCtx.info.frames);
+void NoiseReduction::ReduceNoise(const char* outputPath) {
+    return this->ReduceNoise(outputPath, 0, (size_t)mCtx.info.frames);
 
 }
 
-bool NoiseReduction::ReduceNoise(size_t t0, size_t t1) {
+void NoiseReduction::ReduceNoise(const char* outputPath, size_t t0, size_t t1) {
     NoiseReduction::Settings cleanSettings(mSettings);
     cleanSettings.mDoProfile = false;
     NoiseReductionWorker cleanWorker(cleanSettings, mCtx.info.samplerate);
@@ -952,7 +950,7 @@ bool NoiseReduction::ReduceNoise(size_t t0, size_t t1) {
         InputTrack inputTrack(this->mCtx, i, t0, t1);
         outputs.emplace_back(i, this->mCtx.info.samplerate);
         if (!cleanWorker.ProcessOne(*this->mStatistics, inputTrack, &outputs.back())) {
-            return false;
+            throw std::runtime_error("Cannot process channel");
         }
     }
 
@@ -964,9 +962,10 @@ bool NoiseReduction::ReduceNoise(size_t t0, size_t t1) {
         .samplerate = mCtx.info.samplerate,
     };
 
-    auto filename = "/tmp/foo.wav";
-    SNDFILE* sf = sf_open(filename, SFM_WRITE, &info);
-
+    SNDFILE* sf = sf_open(outputPath, SFM_WRITE, &info);
+    if (!sf) {
+        throw std::runtime_error("Cannot open output file");
+    }
 
     for (int i = 0; i < outputs[0].length; i++) {
         float buffer[mCtx.info.channels];
@@ -977,8 +976,8 @@ bool NoiseReduction::ReduceNoise(size_t t0, size_t t1) {
         sf_count_t written = sf_writef_float(sf, buffer, 1);
         assert(written > 0);
     }
+
     sf_close(sf);
-    return true;
 }
 
 

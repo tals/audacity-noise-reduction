@@ -10,7 +10,7 @@
 #include "NoiseReduction.h"
 #include <sndfile.h>
 #include "loguru.hpp"
-
+#include "Utils.h"
 int main(int argc, const char * argv[]) {
    loguru::g_stderr_verbosity = 9;
    loguru::init(argc, (char**)argv);
@@ -32,7 +32,7 @@ int main(int argc, const char * argv[]) {
 
     NoiseReduction reduction(settings, ctx);
     reduction.ProfileNoise(3400, 6000);
-    reduction.ReduceNoise();
+    reduction.ReduceNoise("/tmp/foo.wav");
 
 
     return 0;

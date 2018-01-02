@@ -42,9 +42,9 @@ public:
 
     NoiseReduction(NoiseReduction::Settings& settings, SndContext& ctx);
     ~NoiseReduction() {};
-    bool ProfileNoise(size_t t0, size_t t1);
-    bool ReduceNoise(size_t t0, size_t t1);
-    bool ReduceNoise();
+    void ProfileNoise(size_t t0, size_t t1);
+    void ReduceNoise(const char* outputPath, size_t t0, size_t t1);
+    void ReduceNoise(const char* outputPath);
 private:
     std::auto_ptr<Statistics> mStatistics;
     NoiseReduction::Settings mSettings;

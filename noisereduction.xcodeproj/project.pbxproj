@@ -11,10 +11,25 @@
 		3FA92D831FF74CB700E0896E /* RealFFTf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FA92D811FF74CB700E0896E /* RealFFTf.cpp */; };
 		3FA92D871FF74E5A00E0896E /* libsndfile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3FA92D861FF74E5A00E0896E /* libsndfile.a */; };
 		3FA92D8D1FF8E5F900E0896E /* NoiseReduction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FA92D8B1FF8E5F900E0896E /* NoiseReduction.cpp */; };
+		3FA92D951FFA4ECC00E0896E /* RealFFTf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FA92D811FF74CB700E0896E /* RealFFTf.cpp */; };
+		3FA92D961FFA4ECC00E0896E /* NoiseReduction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FA92D8B1FF8E5F900E0896E /* NoiseReduction.cpp */; };
+		3FA92D981FFA4ECC00E0896E /* libsndfile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3FA92D861FF74E5A00E0896E /* libsndfile.a */; };
+		3FA92D9E1FFA4ED700E0896E /* test_main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FA92D901FFA4E9D00E0896E /* test_main.cpp */; };
+		3FA92DA01FFA4F5000E0896E /* Extensions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FA92D9F1FFA4F5000E0896E /* Extensions.cpp */; };
+		3FA92DA11FFA4F6900E0896E /* Extensions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FA92D9F1FFA4F5000E0896E /* Extensions.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		3FA92D751FF74C5600E0896E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		3FA92D991FFA4ECC00E0896E /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -32,9 +47,13 @@
 		3FA92D821FF74CB700E0896E /* RealFFTf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RealFFTf.h; sourceTree = "<group>"; };
 		3FA92D841FF74CD100E0896E /* MemoryX.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MemoryX.h; sourceTree = "<group>"; };
 		3FA92D861FF74E5A00E0896E /* libsndfile.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsndfile.a; path = ../../../../../usr/local/Cellar/libsndfile/1.0.28/lib/libsndfile.a; sourceTree = "<group>"; };
-		3FA92D881FF750C100E0896E /* types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = types.h; sourceTree = "<group>"; };
+		3FA92D881FF750C100E0896E /* Types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Types.h; sourceTree = "<group>"; };
 		3FA92D8B1FF8E5F900E0896E /* NoiseReduction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NoiseReduction.cpp; sourceTree = "<group>"; };
 		3FA92D8C1FF8E5F900E0896E /* NoiseReduction.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = NoiseReduction.hpp; sourceTree = "<group>"; };
+		3FA92D8F1FFA4E8B00E0896E /* catch.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = catch.hpp; sourceTree = "<group>"; };
+		3FA92D901FFA4E9D00E0896E /* test_main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = test_main.cpp; sourceTree = "<group>"; };
+		3FA92D9D1FFA4ECC00E0896E /* tests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tests; sourceTree = BUILT_PRODUCTS_DIR; };
+		3FA92D9F1FFA4F5000E0896E /* Extensions.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Extensions.cpp; path = noisereduction/Extensions.cpp; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -43,6 +62,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				3FA92D871FF74E5A00E0896E /* libsndfile.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3FA92D971FFA4ECC00E0896E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3FA92D981FFA4ECC00E0896E /* libsndfile.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -62,6 +89,7 @@
 			isa = PBXGroup;
 			children = (
 				3FA92D771FF74C5600E0896E /* noisereduction */,
+				3FA92D9D1FFA4ECC00E0896E /* tests */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -69,11 +97,13 @@
 		3FA92D791FF74C5600E0896E /* noisereduction */ = {
 			isa = PBXGroup;
 			children = (
+				3FA92D8E1FFA4E8B00E0896E /* tests */,
 				3FA92D841FF74CD100E0896E /* MemoryX.h */,
 				3FA92D811FF74CB700E0896E /* RealFFTf.cpp */,
 				3FA92D821FF74CB700E0896E /* RealFFTf.h */,
 				3FA92D7A1FF74C5600E0896E /* main.cpp */,
-				3FA92D881FF750C100E0896E /* types.h */,
+				3FA92D9F1FFA4F5000E0896E /* Extensions.cpp */,
+				3FA92D881FF750C100E0896E /* Types.h */,
 				3FA92D8B1FF8E5F900E0896E /* NoiseReduction.cpp */,
 				3FA92D8C1FF8E5F900E0896E /* NoiseReduction.hpp */,
 			);
@@ -86,6 +116,15 @@
 				3FA92D861FF74E5A00E0896E /* libsndfile.a */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		3FA92D8E1FFA4E8B00E0896E /* tests */ = {
+			isa = PBXGroup;
+			children = (
+				3FA92D8F1FFA4E8B00E0896E /* catch.hpp */,
+				3FA92D901FFA4E9D00E0896E /* test_main.cpp */,
+			);
+			path = tests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -108,6 +147,23 @@
 			productReference = 3FA92D771FF74C5600E0896E /* noisereduction */;
 			productType = "com.apple.product-type.tool";
 		};
+		3FA92D921FFA4ECC00E0896E /* tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3FA92D9A1FFA4ECC00E0896E /* Build configuration list for PBXNativeTarget "tests" */;
+			buildPhases = (
+				3FA92D931FFA4ECC00E0896E /* Sources */,
+				3FA92D971FFA4ECC00E0896E /* Frameworks */,
+				3FA92D991FFA4ECC00E0896E /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = tests;
+			productName = noisereduction;
+			productReference = 3FA92D9D1FFA4ECC00E0896E /* tests */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -119,6 +175,9 @@
 				TargetAttributes = {
 					3FA92D761FF74C5600E0896E = {
 						CreatedOnToolsVersion = 9.2;
+						ProvisioningStyle = Automatic;
+					};
+					3FA92D921FFA4ECC00E0896E = {
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -136,6 +195,7 @@
 			projectRoot = "";
 			targets = (
 				3FA92D761FF74C5600E0896E /* noisereduction */,
+				3FA92D921FFA4ECC00E0896E /* tests */,
 			);
 		};
 /* End PBXProject section */
@@ -147,7 +207,19 @@
 			files = (
 				3FA92D7B1FF74C5600E0896E /* main.cpp in Sources */,
 				3FA92D831FF74CB700E0896E /* RealFFTf.cpp in Sources */,
+				3FA92DA01FFA4F5000E0896E /* Extensions.cpp in Sources */,
 				3FA92D8D1FF8E5F900E0896E /* NoiseReduction.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3FA92D931FFA4ECC00E0896E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3FA92DA11FFA4F6900E0896E /* Extensions.cpp in Sources */,
+				3FA92D9E1FFA4ED700E0896E /* test_main.cpp in Sources */,
+				3FA92D951FFA4ECC00E0896E /* RealFFTf.cpp in Sources */,
+				3FA92D961FFA4ECC00E0896E /* NoiseReduction.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -285,6 +357,30 @@
 			};
 			name = Release;
 		};
+		3FA92D9B1FFA4ECC00E0896E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/libsndfile/1.0.28/lib,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		3FA92D9C1FFA4ECC00E0896E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/libsndfile/1.0.28/lib,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -302,6 +398,15 @@
 			buildConfigurations = (
 				3FA92D7F1FF74C5600E0896E /* Debug */,
 				3FA92D801FF74C5600E0896E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3FA92D9A1FFA4ECC00E0896E /* Build configuration list for PBXNativeTarget "tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3FA92D9B1FFA4ECC00E0896E /* Debug */,
+				3FA92D9C1FFA4ECC00E0896E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -9,15 +9,15 @@
 #include <iostream>
 #include "NoiseReduction.h"
 #include <sndfile.h>
-#define LOGURU_IMPLEMENTATION 1
 #include "loguru.hpp"
 
 int main(int argc, const char * argv[]) {
-//    loguru::init(argc, (char**)argv);
+   loguru::g_stderr_verbosity = 9;
+   loguru::init(argc, (char**)argv);
 
     // insert code here...
     SF_INFO info = { 0 };
-    SNDFILE* snd = sf_open("/tmp/dtmf.wav", SFM_READ, &info);
+    SNDFILE* snd = sf_open("/Users/tal/dev/lyrebird/noisereduction/samples/dtmf-noise.wav", SFM_READ, &info);
     SndContext ctx = {
         .file = snd,
         .info = info,
@@ -25,9 +25,9 @@ int main(int argc, const char * argv[]) {
 
     NoiseReduction::Settings settings;
     NoiseReduction reduction(settings, ctx);
-    reduction.Process();
+    reduction.ProfileNoise(3400, 6000);
+    reduction.ReduceNoise();
     
-//    RealFFTf(nullptr, nullptr);
-    std::cout << "Hello, World!\n";
+    
     return 0;
 }

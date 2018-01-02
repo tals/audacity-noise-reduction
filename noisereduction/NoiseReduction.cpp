@@ -1,11 +1,14 @@
 #include "NoiseReduction.h"
 #include <math.h>
 #include <assert.h>
+#include <sndfile.h>
+#include "loguru.hpp"
 #include "NoiseReduction.h"
 #include "RealFFTf.h"
-#include <sndfile.h>
-#include "types.h"
-#include "loguru.hpp"
+
+#include "Types.h"
+
+const auto OUTPUT_FORMAT = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
 
 enum DiscriminationMethod {
     DM_MEDIAN,
@@ -72,12 +75,75 @@ enum  NoiseReductionChoice {
 struct OutputTrack {
     FloatVector data;
     int channel;
+    int samplerate;
+    size_t length;
 
-    OutputTrack(int channel): channel(channel) {
+    OutputTrack(int channel, int samplerate):
+        channel(channel), samplerate(samplerate), length(0) {
     }
 
-    void Append(samplePtr buffer, size_t length) {
-        data.insert(data.end(), buffer, &buffer[length]);
+    void Append(float* buffer, size_t count) {
+        length += count;
+        LOG_F(1, "[Channel %d] Appending %d samples (%d total)", this->channel, count, this->length);
+        data.insert(data.end(), buffer, &buffer[count]);
+    }
+
+    void WriteToDisk(const char *filename) {
+        // When opening a file for write, the caller must fill in structure members samplerate, channels, and format.
+        SF_INFO info = {
+            .channels = 1,
+            .format = OUTPUT_FORMAT,
+            .samplerate = this->samplerate,
+         };
+        SNDFILE* sf = sf_open(filename, SFM_WRITE, &info);
+        assert(sf);
+        sf_count_t written = sf_write_float(sf, &data[0], data.size());
+        assert(written > 0);
+        sf_close(sf);
+    }
+};
+
+struct InputTrack {
+    int channel;
+    size_t t0;
+    size_t t1;
+    size_t position;
+    SndContext& ctx;
+
+    InputTrack(SndContext& ctx, int channel, size_t t0, size_t t1):
+       ctx(ctx), channel(channel), t0(t0), t1(t1), position(t0) {
+        sf_seek(ctx.file, channel + t0 * ctx.info.channels, SEEK_SET);
+    }
+
+    size_t length() {
+        return t1 - t0;
+    }
+
+    size_t Read(float* buffer, size_t length) {
+        float* writePos = buffer;
+        size_t totalRead = 0;
+
+        // can be optimized for a single channel file
+        for (int i = 0; i < length; i++) {
+            if (this->position >= t1) {
+                break;
+            }
+
+            size_t read = sf_read_float(ctx.file, writePos, 1);
+            this->position += read;
+            if (read == 0) {
+                break;
+            }
+
+            writePos++;
+            totalRead += read;
+
+            if (ctx.info.channels > 1) {
+                sf_seek(ctx.file, ctx.info.channels, SEEK_CUR);
+            }
+        }
+
+        return totalRead;
     }
 };
 
@@ -128,10 +194,10 @@ public:
     );
     NoiseReductionWorker();
 
-    bool Process(SndContext& ctx, Statistics& statistics, int t0, int t1);
+    bool Process(SndContext& ctx, Statistics& statistics, size_t t0, size_t t1);
 
 private:
-    bool ProcessOne(Statistics &statistics, SndContext& ctx, int t0, int t1, int channel, OutputTrack& outputTrack);
+    bool ProcessOne(Statistics &statistics, InputTrack& track, OutputTrack& outputTrack);
 
     void StartNewTrack();
     void ProcessSamples(Statistics &statistics,
@@ -207,14 +273,19 @@ private:
 };
 
 
-
-bool NoiseReductionWorker::Process(SndContext& ctx, Statistics& statistics, int t0, int t1)
+bool NoiseReductionWorker::Process(SndContext& ctx, Statistics& statistics, size_t t0, size_t t1)
 {
     for (int i = 0; i < ctx.info.channels; i++) {
-        OutputTrack track(i);
-        if (!ProcessOne(statistics, ctx, i, t0, t1, track)) {
+        OutputTrack outputTrack(i, ctx.info.samplerate);
+        InputTrack inputTrack(ctx, i, t0, t1);
+        if (!ProcessOne(statistics, inputTrack, outputTrack)) {
             return false;
         }
+
+        if (!mDoProfile) {
+            outputTrack.WriteToDisk("/tmp/foo.wav");
+        }
+
     }
 
     if (mDoProfile) {
@@ -809,7 +880,7 @@ void NoiseReductionWorker::ReduceNoise
         float *buffer = &mOutOverlapBuffer[0];
         if (mOutStepCount >= 0) {
             // Output the first portion of the overlap buffer, they're done
-            outputTrack.Append((samplePtr)buffer, mStepSize);
+            outputTrack.Append(buffer, mStepSize);
         }
 
         // Shift the remainder over.
@@ -818,7 +889,7 @@ void NoiseReductionWorker::ReduceNoise
     }
 }
 
-bool NoiseReductionWorker::ProcessOne(Statistics &statistics, SndContext& ctx, int t0, int t1, int channel, OutputTrack& outputTrack)
+bool NoiseReductionWorker::ProcessOne(Statistics &statistics, InputTrack& inputTrack, OutputTrack& outputTrack)
 {
     /**
      * Frames coming from libsndfile are striped, chanel-wise: [{left, right},  {left, right}, ...]
@@ -829,30 +900,17 @@ bool NoiseReductionWorker::ProcessOne(Statistics &statistics, SndContext& ctx, i
     const sf_count_t BUFFER_SIZE = 500000; // 2mb
     FloatVector buffer(BUFFER_SIZE);
 
-    const sf_count_t STEP_SIZE = BUFFER_SIZE * ctx.info.channels;
-
     bool bLoopSuccess = true;
 
-    // todo: introduce time
-    // pull this out to a separate InputTrack class
-    // 1. align libsnd ptr such that the first read will start on our channel
-    //    essentially seek/sf_read_float() channelIndex times
-    // 2. while needToRead
-    // 2.1.   read sample
-    // 2.2.   seek channelCount samples forward
-    for (int i = 0; i < ctx.info.frames && bLoopSuccess; i += STEP_SIZE) {
-        auto lenToParse = std::min(STEP_SIZE, (ctx.info.frames - i));
-        auto len = lenToParse / ctx.info.channels;
+    for (size_t i = 0; i < inputTrack.length();) {
+        size_t len = inputTrack.Read(&buffer[0], BUFFER_SIZE);
 
-        for (int j = 0; j < lenToParse; j++) {
-            if (j % ctx.info.channels != channel) {
-                float scratch;
-                sf_read_float(ctx.file, &scratch, 1);
-            } else {
-                sf_read_float(ctx.file, &buffer[j / ctx.info.channels], 1);
-            }
+        if (len == 0) {
+            LOG_F(WARNING, "Couldn't read data from input track");
+            break;
         }
-        
+
+        i += len;
         mInSampleCount += len;
         ProcessSamples(statistics, &buffer[0], len, outputTrack);
     }
@@ -880,14 +938,46 @@ NoiseReduction::NoiseReduction(NoiseReduction::Settings& settings, SndContext& c
 {
     size_t spectrumSize = 1 + mSettings.WindowSize() / 2;
     mStatistics.reset(new Statistics(spectrumSize, mCtx.info.samplerate, mSettings.mWindowTypes));
+
+    mSettings.mNoiseGain = 39;
+    mSettings.mDoProfile = false;
+    mSettings.mNewSensitivity = 16;
+    mSettings.mFreqSmoothingBands = 0;
+    mSettings.mNoiseGain = 39;
+    mSettings.mAttackTime = 0.02;
+    mSettings.mReleaseTime = 0.10000000000000001;
+    mSettings.mOldSensitivity = 0;
+    mSettings.mNoiseReductionChoice = 0;
+    mSettings.mWindowTypes = 2;
+    mSettings.mWindowSizeChoice = 8;
+    mSettings.mStepsPerWindowChoice = 1;
+    mSettings.mMethod = 1;
+
+
 }
 
-void NoiseReduction::Process() {
+bool NoiseReduction::ProfileNoise(size_t t0, size_t t1) {
     NoiseReduction::Settings profileSettings(mSettings);
     profileSettings.mDoProfile = true;
     NoiseReductionWorker profileWorker(profileSettings, mCtx.info.samplerate);
+    // auto status = profileWorker.Process(mCtx, *mStatistics, 3400, 6000);
+    auto status = profileWorker.Process(mCtx, *mStatistics, t0, t1);
 
-    profileWorker.Process(mCtx, *mStatistics, 0, mCtx.info.frames / 2);
+    return status;
+}
+
+bool NoiseReduction::ReduceNoise() {
+    return this->ReduceNoise(0, (size_t)mCtx.info.frames);
+
+}
+
+bool NoiseReduction::ReduceNoise(size_t t0, size_t t1) {
+    NoiseReduction::Settings cleanSettings(mSettings);
+    cleanSettings.mDoProfile = false;
+    NoiseReductionWorker cleanWorker(cleanSettings, mCtx.info.samplerate);
+    auto status = cleanWorker.Process(mCtx, *mStatistics, t0, t1);
+
+    return status;
 }
 
 NoiseReduction::Settings::Settings() {
@@ -897,7 +987,7 @@ NoiseReduction::Settings::Settings() {
     mStepsPerWindowChoice = DEFAULT_STEPS_PER_WINDOW_CHOICE;
     mMethod = DM_DEFAULT_METHOD;
     mOldSensitivity = DEFAULT_OLD_SENSITIVITY;
-    mNoiseReductionChoice = NRC_ISOLATE_NOISE;
+    mNoiseReductionChoice = NRC_REDUCE_NOISE;
 
     mNewSensitivity = 6.0;
     mNoiseGain = 12.0;

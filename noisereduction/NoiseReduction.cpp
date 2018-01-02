@@ -84,7 +84,7 @@ struct OutputTrack {
 
     void Append(float* buffer, size_t count) {
         length += count;
-        LOG_F(1, "[Channel %d] Appending %d samples (%d total)", this->channel, count, this->length);
+        LOG_F(1, "[Channel %d] Appending %zd samples (%zd total)", this->channel, count, this->length);
         data.insert(data.end(), buffer, &buffer[count]);
     }
 
@@ -117,7 +117,7 @@ struct InputTrack {
 
     InputTrack(SndContext& ctx, int channel, size_t t0, size_t t1):
        ctx(ctx), channel(channel), t0(t0), t1(t1), position(t0) {
-        sf_seek(ctx.file, channel + t0 * ctx.info.channels, SEEK_SET);
+        sf_seek(ctx.file, t0, SEEK_SET);
     }
 
     size_t length() {
@@ -128,24 +128,23 @@ struct InputTrack {
         float* writePos = buffer;
         size_t totalRead = 0;
 
-        // can be optimized for a single channel file
+        // can only read full frames from libsnd.
+        // will probably be a lot faster to read the whole thing and then split it
         for (int i = 0; i < length; i++) {
             if (this->position >= t1) {
                 break;
             }
 
-            size_t read = sf_read_float(ctx.file, writePos, 1);
+            float buffer[this->ctx.info.channels];
+            size_t read = sf_readf_float(this->ctx.file, buffer, 1);
             this->position += read;
             if (read == 0) {
                 break;
             }
 
+            *writePos = buffer[this->channel];
             writePos++;
             totalRead += read;
-
-            if (ctx.info.channels > 1) {
-                sf_seek(ctx.file, ctx.info.channels, SEEK_CUR);
-            }
         }
 
         return totalRead;
@@ -199,22 +198,21 @@ public:
     );
     NoiseReductionWorker();
 
-    bool Process(SndContext& ctx, Statistics& statistics, size_t t0, size_t t1);
+    bool ProcessOne(Statistics &statistics, InputTrack& track, OutputTrack* outputTrack);
 
 private:
-    bool ProcessOne(Statistics &statistics, InputTrack& track, OutputTrack& outputTrack);
 
     void StartNewTrack();
     void ProcessSamples(Statistics &statistics,
-                        float *buffer, size_t len, OutputTrack& outputTrack);
+                        float *buffer, size_t len, OutputTrack* outputTrack);
     void FillFirstHistoryWindow();
     void ApplyFreqSmoothing(FloatVector &gains);
     void GatherStatistics(Statistics &statistics);
     inline bool Classify(const Statistics &statistics, int band);
-    void ReduceNoise(const Statistics &statistics, OutputTrack& outputTrack);
+    void ReduceNoise(const Statistics &statistics, OutputTrack* outputTrack);
     void RotateHistoryWindows();
     void FinishTrackStatistics(Statistics &statistics);
-    void FinishTrack(Statistics &statistics, OutputTrack& outputTrack);
+    void FinishTrack(Statistics &statistics, OutputTrack* outputTrack);
 
 private:
 
@@ -276,32 +274,6 @@ private:
     };
     std::vector<movable_ptr<Record>> mQueue;
 };
-
-
-bool NoiseReductionWorker::Process(SndContext& ctx, Statistics& statistics, size_t t0, size_t t1)
-{
-    for (int i = 0; i < ctx.info.channels; i++) {
-        OutputTrack outputTrack(i, ctx.info.samplerate);
-        InputTrack inputTrack(ctx, i, t0, t1);
-        if (!ProcessOne(statistics, inputTrack, outputTrack)) {
-            return false;
-        }
-
-        if (!mDoProfile) {
-            outputTrack.WriteToDisk("/tmp/foo.wav");
-        }
-
-    }
-
-    if (mDoProfile) {
-        if (statistics.mTotalWindows == 0) {
-            LOG_F(ERROR, "Selected noise profile is too short.");
-            return false;
-        }
-    }
-
-    return true;
-}
 
 void NoiseReductionWorker::ApplyFreqSmoothing(FloatVector &gains)
 {
@@ -527,7 +499,7 @@ void NoiseReductionWorker::StartNewTrack()
 }
 
 void NoiseReductionWorker::ProcessSamples
-(Statistics &statistics, float *buffer, size_t len, OutputTrack& outputTrack)
+(Statistics &statistics, float *buffer, size_t len, OutputTrack* outputTrack)
 {
     while (len && mOutStepCount * mStepSize < mInSampleCount) {
         auto avail = std::min(len, mWindowSize - mInWavePos);
@@ -625,7 +597,7 @@ void NoiseReductionWorker::FinishTrackStatistics(Statistics &statistics)
 }
 
 void NoiseReductionWorker::FinishTrack
-(Statistics &statistics, OutputTrack& outputTrack)
+(Statistics &statistics, OutputTrack* outputTrack)
 {
     // Keep flushing empty input buffers through the history
     // windows until we've output exactly as many samples as
@@ -748,7 +720,7 @@ bool NoiseReductionWorker::Classify(const Statistics &statistics, int band)
 }
 
 void NoiseReductionWorker::ReduceNoise
-(const Statistics &statistics, OutputTrack& outputTrack)
+(const Statistics &statistics, OutputTrack* outputTrack)
 {
     // Raise the gain for elements in the center of the sliding history
     // or, if isolating noise, zero out the non-noise
@@ -885,7 +857,7 @@ void NoiseReductionWorker::ReduceNoise
         float *buffer = &mOutOverlapBuffer[0];
         if (mOutStepCount >= 0) {
             // Output the first portion of the overlap buffer, they're done
-            outputTrack.Append(buffer, mStepSize);
+            outputTrack->Append(buffer, mStepSize);
         }
 
         // Shift the remainder over.
@@ -894,10 +866,10 @@ void NoiseReductionWorker::ReduceNoise
     }
 }
 
-bool NoiseReductionWorker::ProcessOne(Statistics &statistics, InputTrack& inputTrack, OutputTrack& outputTrack)
+bool NoiseReductionWorker::ProcessOne(Statistics &statistics, InputTrack& inputTrack, OutputTrack* outputTrack)
 {
     /**
-     * Frames coming from libsndfile are striped, chanel-wise: [{left, right},  {left, right}, ...]
+     * Frames coming from libsndfile are striped, channel-wise: [{left, right},  {left, right}, ...]
      * NR code works on a per-track basis
      */
     StartNewTrack();
@@ -929,7 +901,7 @@ bool NoiseReductionWorker::ProcessOne(Statistics &statistics, InputTrack& inputT
 
    if (bLoopSuccess && !mDoProfile) {
       // Filtering effects always end up with more data than they started with.  Delete this 'tail'.
-       outputTrack.SetEnd(inputTrack.length());
+       outputTrack->SetEnd(inputTrack.length());
    }
 
     return bLoopSuccess;
@@ -965,10 +937,20 @@ bool NoiseReduction::ProfileNoise(size_t t0, size_t t1) {
     NoiseReduction::Settings profileSettings(mSettings);
     profileSettings.mDoProfile = true;
     NoiseReductionWorker profileWorker(profileSettings, mCtx.info.samplerate);
-    // auto status = profileWorker.Process(mCtx, *mStatistics, 3400, 6000);
-    auto status = profileWorker.Process(mCtx, *mStatistics, t0, t1);
 
-    return status;
+    for (int i = 0; i < this->mCtx.info.channels; i++) {
+        InputTrack inputTrack(this->mCtx, i, t0, t1);
+        if (!profileWorker.ProcessOne(*this->mStatistics, inputTrack, nullptr)) {
+            return false;
+        }
+    }
+
+    if (this->mStatistics->mTotalWindows == 0) {
+        LOG_F(ERROR, "Selected noise profile is too short.");
+        return false;
+    }
+
+    return true;
 }
 
 bool NoiseReduction::ReduceNoise() {
@@ -980,10 +962,42 @@ bool NoiseReduction::ReduceNoise(size_t t0, size_t t1) {
     NoiseReduction::Settings cleanSettings(mSettings);
     cleanSettings.mDoProfile = false;
     NoiseReductionWorker cleanWorker(cleanSettings, mCtx.info.samplerate);
-    auto status = cleanWorker.Process(mCtx, *mStatistics, t0, t1);
 
-    return status;
+    std::vector<OutputTrack> outputs;
+    for (int i = 0; i < this->mCtx.info.channels; i++) {
+        InputTrack inputTrack(this->mCtx, i, t0, t1);
+        outputs.emplace_back(i, this->mCtx.info.samplerate);
+        if (!cleanWorker.ProcessOne(*this->mStatistics, inputTrack, &outputs.back())) {
+            return false;
+        }
+    }
+
+    // write samples
+    auto channels = mCtx.info.channels;
+    SF_INFO info = {
+        .channels = channels,
+        .format = OUTPUT_FORMAT,
+        .samplerate = mCtx.info.samplerate,
+    };
+    
+    auto filename = "/tmp/foo.wav";
+    SNDFILE* sf = sf_open(filename, SFM_WRITE, &info);
+    
+    
+    for (int i = 0; i < outputs[0].length; i++) {
+        float buffer[mCtx.info.channels];
+        for (int currentChannel = 0; currentChannel < channels; currentChannel++) {
+            buffer[currentChannel] = outputs[currentChannel].data[i];
+        }
+
+        sf_count_t written = sf_writef_float(sf, buffer, 1);
+        assert(written > 0);
+    }
+    sf_close(sf);
+    return true;
 }
+
+
 
 NoiseReduction::Settings::Settings() {
 

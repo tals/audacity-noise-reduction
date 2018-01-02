@@ -17,17 +17,17 @@ int main(int argc, const char * argv[]) {
 
     // insert code here...
     SF_INFO info = { 0 };
-    SNDFILE* snd = sf_open("/Users/tal/dev/lyrebird/noisereduction/samples/dtmf-noise.wav", SFM_READ, &info);
+    SNDFILE* snd = sf_open("/Users/tal/dev/lyrebird/noisereduction/samples/dtmf-noise-stereo.wav", SFM_READ, &info);
+    assert(snd);
     SndContext ctx = {
         .file = snd,
         .info = info,
     };
-
     NoiseReduction::Settings settings;
     NoiseReduction reduction(settings, ctx);
     reduction.ProfileNoise(3400, 6000);
     reduction.ReduceNoise();
-    
-    
+
+
     return 0;
 }

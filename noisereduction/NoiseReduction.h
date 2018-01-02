@@ -1,15 +1,11 @@
 #pragma once
 #include <sndfile.h>
 #include <memory>
+#include "Utils.h"
 #define DB_TO_LINEAR(x) (pow(10.0, (x) / 20.0))
 #define LINEAR_TO_DB(x) (20.0 * log10(x))
 
 typedef char *samplePtr;
-
-struct SndContext {
-    SNDFILE *file;
-    SF_INFO info;
-};
 
 class NoiseReductionWorker;
 class Statistics;

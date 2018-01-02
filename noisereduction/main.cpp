@@ -15,14 +15,10 @@ int main(int argc, const char * argv[]) {
    loguru::g_stderr_verbosity = 9;
    loguru::init(argc, (char**)argv);
 
+
+
     // insert code here...
-    SF_INFO info = { 0 };
-    SNDFILE* snd = sf_open("/Users/tal/dev/lyrebird/noisereduction/samples/dtmf-noise-stereo.wav", SFM_READ, &info);
-    assert(snd);
-    SndContext ctx = {
-        .file = snd,
-        .info = info,
-    };
+    auto ctx = openAudioFile("/Users/tal/dev/lyrebird/noisereduction/samples/dtmf-noise-stereo.wav");
     NoiseReduction::Settings settings;
 
     // test settings

@@ -17,6 +17,14 @@
 		3FA92D9E1FFA4ED700E0896E /* test_main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FA92D901FFA4E9D00E0896E /* test_main.cpp */; };
 		3FA92DA01FFA4F5000E0896E /* Extensions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FA92D9F1FFA4F5000E0896E /* Extensions.cpp */; };
 		3FA92DA11FFA4F6900E0896E /* Extensions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FA92D9F1FFA4F5000E0896E /* Extensions.cpp */; };
+		3FA92DA71FFB5BAC00E0896E /* test_audacity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FA92DA51FFB5B3F00E0896E /* test_audacity.cpp */; };
+		3FA92DAD1FFB5DB800E0896E /* dtmf-noise-mono-audacity-gain-39-sensitivity-16-smooth-0.wav in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3FA92DA91FFB5D9A00E0896E /* dtmf-noise-mono-audacity-gain-39-sensitivity-16-smooth-0.wav */; };
+		3FA92DAE1FFB5DB800E0896E /* dtmf-noise-stereo-audacity-gain-39-sensitivity-16-smooth-0.wav in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3FA92DAA1FFB5D9A00E0896E /* dtmf-noise-stereo-audacity-gain-39-sensitivity-16-smooth-0.wav */; };
+		3FA92DAF1FFB5DB800E0896E /* dtmf-noise-stereo.wav in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3FA92DAB1FFB5D9A00E0896E /* dtmf-noise-stereo.wav */; };
+		3FA92DB01FFB5DB800E0896E /* dtmf-noise-mono.wav in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3FA92DAC1FFB5D9A00E0896E /* dtmf-noise-mono.wav */; };
+		3FA92DB21FFB60EB00E0896E /* Utils.cpp in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3FA92DB11FFB60EB00E0896E /* Utils.cpp */; };
+		3FA92DB31FFB610700E0896E /* Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FA92DB11FFB60EB00E0896E /* Utils.cpp */; };
+		3FA92DB41FFB613A00E0896E /* Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FA92DB11FFB60EB00E0896E /* Utils.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -31,12 +39,17 @@
 		};
 		3FA92D991FFA4ECC00E0896E /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
+			buildActionMask = 12;
+			dstPath = "";
+			dstSubfolderSpec = 6;
 			files = (
+				3FA92DB21FFB60EB00E0896E /* Utils.cpp in CopyFiles */,
+				3FA92DAD1FFB5DB800E0896E /* dtmf-noise-mono-audacity-gain-39-sensitivity-16-smooth-0.wav in CopyFiles */,
+				3FA92DAE1FFB5DB800E0896E /* dtmf-noise-stereo-audacity-gain-39-sensitivity-16-smooth-0.wav in CopyFiles */,
+				3FA92DAF1FFB5DB800E0896E /* dtmf-noise-stereo.wav in CopyFiles */,
+				3FA92DB01FFB5DB800E0896E /* dtmf-noise-mono.wav in CopyFiles */,
 			);
-			runOnlyForDeploymentPostprocessing = 1;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
@@ -49,11 +62,19 @@
 		3FA92D861FF74E5A00E0896E /* libsndfile.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsndfile.a; path = ../../../../../usr/local/Cellar/libsndfile/1.0.28/lib/libsndfile.a; sourceTree = "<group>"; };
 		3FA92D881FF750C100E0896E /* Types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Types.h; sourceTree = "<group>"; };
 		3FA92D8B1FF8E5F900E0896E /* NoiseReduction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NoiseReduction.cpp; sourceTree = "<group>"; };
-		3FA92D8C1FF8E5F900E0896E /* NoiseReduction.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = NoiseReduction.hpp; sourceTree = "<group>"; };
 		3FA92D8F1FFA4E8B00E0896E /* catch.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = catch.hpp; sourceTree = "<group>"; };
 		3FA92D901FFA4E9D00E0896E /* test_main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = test_main.cpp; sourceTree = "<group>"; };
 		3FA92D9D1FFA4ECC00E0896E /* tests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tests; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FA92D9F1FFA4F5000E0896E /* Extensions.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Extensions.cpp; path = noisereduction/Extensions.cpp; sourceTree = SOURCE_ROOT; };
+		3FA92DA21FFB5ADF00E0896E /* Utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
+		3FA92DA41FFB5B2300E0896E /* NoiseReduction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NoiseReduction.h; sourceTree = "<group>"; };
+		3FA92DA51FFB5B3F00E0896E /* test_audacity.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = test_audacity.cpp; sourceTree = "<group>"; };
+		3FA92DA91FFB5D9A00E0896E /* dtmf-noise-mono-audacity-gain-39-sensitivity-16-smooth-0.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "dtmf-noise-mono-audacity-gain-39-sensitivity-16-smooth-0.wav"; sourceTree = "<group>"; };
+		3FA92DAA1FFB5D9A00E0896E /* dtmf-noise-stereo-audacity-gain-39-sensitivity-16-smooth-0.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "dtmf-noise-stereo-audacity-gain-39-sensitivity-16-smooth-0.wav"; sourceTree = "<group>"; };
+		3FA92DAB1FFB5D9A00E0896E /* dtmf-noise-stereo.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "dtmf-noise-stereo.wav"; sourceTree = "<group>"; };
+		3FA92DAC1FFB5D9A00E0896E /* dtmf-noise-mono.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "dtmf-noise-mono.wav"; sourceTree = "<group>"; };
+		3FA92DB11FFB60EB00E0896E /* Utils.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Utils.cpp; sourceTree = "<group>"; };
+		3FA92DB51FFC337A00E0896E /* cxxopts.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = cxxopts.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,6 +100,7 @@
 		3FA92D6E1FF74C5600E0896E = {
 			isa = PBXGroup;
 			children = (
+				3FA92DA81FFB5D9A00E0896E /* samples */,
 				3FA92D791FF74C5600E0896E /* noisereduction */,
 				3FA92D781FF74C5600E0896E /* Products */,
 				3FA92D851FF74E5A00E0896E /* Frameworks */,
@@ -97,6 +119,7 @@
 		3FA92D791FF74C5600E0896E /* noisereduction */ = {
 			isa = PBXGroup;
 			children = (
+				3FA92DB51FFC337A00E0896E /* cxxopts.hpp */,
 				3FA92D8E1FFA4E8B00E0896E /* tests */,
 				3FA92D841FF74CD100E0896E /* MemoryX.h */,
 				3FA92D811FF74CB700E0896E /* RealFFTf.cpp */,
@@ -105,7 +128,9 @@
 				3FA92D9F1FFA4F5000E0896E /* Extensions.cpp */,
 				3FA92D881FF750C100E0896E /* Types.h */,
 				3FA92D8B1FF8E5F900E0896E /* NoiseReduction.cpp */,
-				3FA92D8C1FF8E5F900E0896E /* NoiseReduction.hpp */,
+				3FA92DA41FFB5B2300E0896E /* NoiseReduction.h */,
+				3FA92DA21FFB5ADF00E0896E /* Utils.h */,
+				3FA92DB11FFB60EB00E0896E /* Utils.cpp */,
 			);
 			path = noisereduction;
 			sourceTree = "<group>";
@@ -123,8 +148,20 @@
 			children = (
 				3FA92D8F1FFA4E8B00E0896E /* catch.hpp */,
 				3FA92D901FFA4E9D00E0896E /* test_main.cpp */,
+				3FA92DA51FFB5B3F00E0896E /* test_audacity.cpp */,
 			);
 			path = tests;
+			sourceTree = "<group>";
+		};
+		3FA92DA81FFB5D9A00E0896E /* samples */ = {
+			isa = PBXGroup;
+			children = (
+				3FA92DA91FFB5D9A00E0896E /* dtmf-noise-mono-audacity-gain-39-sensitivity-16-smooth-0.wav */,
+				3FA92DAA1FFB5D9A00E0896E /* dtmf-noise-stereo-audacity-gain-39-sensitivity-16-smooth-0.wav */,
+				3FA92DAB1FFB5D9A00E0896E /* dtmf-noise-stereo.wav */,
+				3FA92DAC1FFB5D9A00E0896E /* dtmf-noise-mono.wav */,
+			);
+			path = samples;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -208,6 +245,7 @@
 				3FA92D7B1FF74C5600E0896E /* main.cpp in Sources */,
 				3FA92D831FF74CB700E0896E /* RealFFTf.cpp in Sources */,
 				3FA92DA01FFA4F5000E0896E /* Extensions.cpp in Sources */,
+				3FA92DB31FFB610700E0896E /* Utils.cpp in Sources */,
 				3FA92D8D1FF8E5F900E0896E /* NoiseReduction.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -216,9 +254,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3FA92DA71FFB5BAC00E0896E /* test_audacity.cpp in Sources */,
 				3FA92DA11FFA4F6900E0896E /* Extensions.cpp in Sources */,
 				3FA92D9E1FFA4ED700E0896E /* test_main.cpp in Sources */,
 				3FA92D951FFA4ECC00E0896E /* RealFFTf.cpp in Sources */,
+				3FA92DB41FFB613A00E0896E /* Utils.cpp in Sources */,
 				3FA92D961FFA4ECC00E0896E /* NoiseReduction.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

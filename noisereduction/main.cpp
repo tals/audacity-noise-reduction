@@ -13,7 +13,6 @@
 #include "Utils.h"
 #include "cxxopts.hpp"
 
-
 int main(int argc, char * argv[]) {
     cxxopts::Options options("NoiseReduction Test", "Driver for Noise Reduction");
     options.add_options()
@@ -45,6 +44,7 @@ int main(int argc, char * argv[]) {
 
 
     std::cout << "Processing " << result["input"].as<std::string>() << " -> " << result["output"].as<std::string>() << std::endl;
+
     auto ctx = openAudioFile(result["input"].as<std::string>().c_str());
 
     NoiseReduction::Settings settings;

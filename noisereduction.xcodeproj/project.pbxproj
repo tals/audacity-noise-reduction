@@ -25,6 +25,7 @@
 		3FA92DB21FFB60EB00E0896E /* Utils.cpp in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3FA92DB11FFB60EB00E0896E /* Utils.cpp */; };
 		3FA92DB31FFB610700E0896E /* Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FA92DB11FFB60EB00E0896E /* Utils.cpp */; };
 		3FA92DB41FFB613A00E0896E /* Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FA92DB11FFB60EB00E0896E /* Utils.cpp */; };
+		3FA92DB81FFC754B00E0896E /* test_mmap_snd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FA92DB61FFC736D00E0896E /* test_mmap_snd.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -75,6 +76,7 @@
 		3FA92DAC1FFB5D9A00E0896E /* dtmf-noise-mono.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "dtmf-noise-mono.wav"; sourceTree = "<group>"; };
 		3FA92DB11FFB60EB00E0896E /* Utils.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Utils.cpp; sourceTree = "<group>"; };
 		3FA92DB51FFC337A00E0896E /* cxxopts.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = cxxopts.hpp; sourceTree = "<group>"; };
+		3FA92DB61FFC736D00E0896E /* test_mmap_snd.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_mmap_snd.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -146,6 +148,7 @@
 		3FA92D8E1FFA4E8B00E0896E /* tests */ = {
 			isa = PBXGroup;
 			children = (
+				3FA92DB61FFC736D00E0896E /* test_mmap_snd.cpp */,
 				3FA92D8F1FFA4E8B00E0896E /* catch.hpp */,
 				3FA92D901FFA4E9D00E0896E /* test_main.cpp */,
 				3FA92DA51FFB5B3F00E0896E /* test_audacity.cpp */,
@@ -254,6 +257,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3FA92DB81FFC754B00E0896E /* test_mmap_snd.cpp in Sources */,
 				3FA92DA71FFB5BAC00E0896E /* test_audacity.cpp in Sources */,
 				3FA92DA11FFA4F6900E0896E /* Extensions.cpp in Sources */,
 				3FA92D9E1FFA4ED700E0896E /* test_main.cpp in Sources */,

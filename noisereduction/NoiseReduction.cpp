@@ -980,18 +980,18 @@ void NoiseReduction::ReduceNoise(const char* outputPath, size_t t0, size_t t1) {
     auto frameCount = outputs[0].length;
     LOG_F(INFO, "Writing %zd frames to disk", frameCount);
 
+    // write audio to buffer so that the channels are interleaved
+    float* buffer = new float[frameCount*mCtx.info.channels];
     for (int i = 0; i < frameCount; i++) {
-        // create frame
-        float buffer[mCtx.info.channels];
         for (int currentChannel = 0; currentChannel < channels; currentChannel++) {
-            buffer[currentChannel] = outputs[currentChannel].data[i];
+            buffer[i*mCtx.info.channels+currentChannel] = outputs[currentChannel].data[i];
         }
-
-        // write frame
-        sf_count_t written = sf_writef_float(sf, buffer, 1);
-        assert(written > 0);
     }
+    // write buffer to disk
+    sf_count_t written = sf_writef_float(sf, buffer, frameCount);
+    assert(written > 0);
 
+    delete[] buffer;
     sf_close(sf);
 }
 

@@ -46,11 +46,19 @@ CFLAGS := -std=c11
 # C++ flags
 CXXFLAGS := -std=c++11
 # C/C++ flags
-CPPFLAGS := -g -Wall -Wextra -pedantic
+CPPFLAGS := -Wall -Wextra -pedantic
 # linker flags
 LDFLAGS := -lsndfile
 # flags required for dependency generation; passed to compilers
 DEPFLAGS = -MT $@ -MD -MP -MF $(DEPDIR)/$*.Td
+
+# debug flags (enable with `make DEBUG=1`)
+DEBUG ?= 0
+ifeq ($(DEBUG), 1)
+	CPPFLAGS += -DDEBUG -g
+else
+	CPPFLAGS += -DNDEBUG -Ofast
+endif
 
 # compile C source files
 COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) -c -o $@

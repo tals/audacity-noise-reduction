@@ -980,16 +980,26 @@ void NoiseReduction::ReduceNoise(const char* outputPath, size_t t0, size_t t1) {
     auto frameCount = outputs[0].length;
     LOG_F(INFO, "Writing %zd frames to disk", frameCount);
 
-    for (int i = 0; i < frameCount; i++) {
-        // create frame
-        float buffer[mCtx.info.channels];
-        for (int currentChannel = 0; currentChannel < channels; currentChannel++) {
-            buffer[currentChannel] = outputs[currentChannel].data[i];
-        }
+    // copy audio to buffer so that channels are interleaved
+    const size_t bufferFrames = 1024;
+    const size_t bufferSize = channels * bufferFrames;
+    auto buffer = std::make_unique<float[]>(bufferSize);
 
-        // write frame
-        sf_count_t written = sf_writef_float(sf, buffer, 1);
-        assert(written > 0);
+    int frames = 0;
+
+    for (int i = 0; i < frameCount; i++) {
+        for (int j = 0; j < channels; j++) {
+            buffer[frames * channels + j] = outputs[j].data[i];
+        }
+        if (++frames % bufferFrames == 0) {
+            assert(sf_writef_float(sf, buffer.get(), bufferFrames) > 0);
+            frames = 0;
+        }
+    }
+
+    // write remaining frames left in buffer
+    if (frames > 0) {
+        assert(sf_writef_float(sf, buffer.get(), frames) > 0);
     }
 
     sf_close(sf);

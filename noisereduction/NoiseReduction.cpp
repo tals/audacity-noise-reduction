@@ -991,7 +991,9 @@ void NoiseReduction::ReduceNoise(const char* outputPath, size_t t0, size_t t1) {
         for (int j = 0; j < channels; j++) {
             buffer[frames * channels + j] = outputs[j].data[i];
         }
-        if (++frames % bufferFrames == 0) {
+
+        frames++;
+        if (frames == bufferFrames) {
             assert(sf_writef_float(sf, buffer.get(), bufferFrames) > 0);
             frames = 0;
         }

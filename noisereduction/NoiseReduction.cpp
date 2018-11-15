@@ -1,3 +1,30 @@
+/**********************************************************************
+  Audacity: A Digital Audio Editor
+  NoiseReduction.cpp
+  Dominic Mazzoni
+  detailed rewriting by
+  Paul Licameli
+*******************************************************************//**
+\class EffectNoiseReduction
+\brief A two-pass effect to reduce background noise.
+  The first pass is done over just noise.  For each windowed sample
+  of the sound, we take a FFT and then statistics are tabulated for
+  each frequency band.
+  During the noise reduction phase, we start by setting a gain control
+  for each frequency band such that if the sound has exceeded the
+  previously-determined threshold, the gain is set to 0 dB, otherwise
+  the gain is set lower (e.g. -18 dB), to suppress the noise.
+  Then time-smoothing is applied so that the gain for each frequency
+  band moves slowly, and then frequency-smoothing is applied so that a
+  single frequency is never suppressed or boosted in isolation.
+  Lookahead is employed; this effect is not designed for real-time
+  but if it were, there would be a significant delay.
+  The gain controls are applied to the complex FFT of the signal,
+  and then the inverse FFT is applied.  A Hanning window may be
+  applied (depending on the advanced window types setting), and then
+  the output signal is then pieced together using overlap/add.
+*//****************************************************************//**
+*/
 #include "NoiseReduction.h"
 #include <math.h>
 #include <assert.h>

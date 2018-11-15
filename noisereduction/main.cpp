@@ -1,11 +1,3 @@
-//
-//  main.cpp
-//  noisereduction
-//
-//  Created by Tal Shiri on 12/29/17.
-//  Copyright © 2017 org. All rights reserved.
-//
-
 #include <iostream>
 #include "NoiseReduction.h"
 #include <sndfile.h>

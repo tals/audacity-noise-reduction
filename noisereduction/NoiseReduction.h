@@ -1,4 +1,12 @@
+/**********************************************************************
+  Audacity: A Digital Audio Editor
+  NoiseReduction.h
+  Dominic Mazzoni
+  Vaughan Johnson (Preview)
+  Paul Licameli
+**********************************************************************/
 #pragma once
+
 #include <sndfile.h>
 #include <memory>
 #include "Utils.h"

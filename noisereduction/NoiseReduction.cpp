@@ -994,14 +994,16 @@ void NoiseReduction::ReduceNoise(const char* outputPath, size_t t0, size_t t1) {
 
         frames++;
         if (frames == bufferFrames) {
-            assert(sf_writef_float(sf, buffer.get(), bufferFrames) > 0);
+            sf_count_t written = sf_writef_float(sf, buffer.get(), bufferFrames);
+            assert(written > 0);
             frames = 0;
         }
     }
 
     // write remaining frames left in buffer
     if (frames > 0) {
-        assert(sf_writef_float(sf, buffer.get(), frames) > 0);
+        sf_count_t written = sf_writef_float(sf, buffer.get(), frames);
+        assert(written > 0);
     }
 
     sf_close(sf);

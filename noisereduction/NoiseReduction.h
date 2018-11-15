@@ -45,12 +45,12 @@ public:
     };
 
     NoiseReduction(NoiseReduction::Settings& settings, SndContext& ctx);
-    ~NoiseReduction() {};
+    ~NoiseReduction();
     void ProfileNoise(size_t t0, size_t t1);
     void ReduceNoise(const char* outputPath, size_t t0, size_t t1);
     void ReduceNoise(const char* outputPath);
 private:
-    std::auto_ptr<Statistics> mStatistics;
+    std::unique_ptr<Statistics> mStatistics;
     NoiseReduction::Settings mSettings;
     SndContext& mCtx;
 

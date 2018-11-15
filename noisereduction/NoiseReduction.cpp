@@ -942,6 +942,8 @@ NoiseReduction::NoiseReduction(NoiseReduction::Settings& settings, SndContext& c
     mStatistics.reset(new Statistics(spectrumSize, mCtx.info.samplerate, mSettings.mWindowTypes));
 }
 
+NoiseReduction::~NoiseReduction() = default;
+
 void NoiseReduction::ProfileNoise(size_t t0, size_t t1) {
     LOG_SCOPE_F(INFO, "Profiling noise for {%zd, %zd}", t0, t1);
 

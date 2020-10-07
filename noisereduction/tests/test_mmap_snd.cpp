@@ -17,7 +17,7 @@
 #include "../NoiseReduction.h"
 
 SndContext openAudioFileRawIO(const char* path) {
-    SF_INFO info = { 0 };
+    SF_INFO info = { };
     SNDFILE* snd = sf_open(path, SFM_READ, &info);
     SndContext ctx = {
         .file = snd,

@@ -1,3 +1,4 @@
+UNAME_S := $(shell uname -s)
 
 # output binary
 BINDIR := bin
@@ -49,6 +50,9 @@ CXXFLAGS := -std=c++11
 CPPFLAGS := -Wall -Wextra -pedantic
 # linker flags
 LDFLAGS := -lsndfile
+ifeq ($(UNAME_S),Linux)
+	LDFLAGS += -lpthread -ldl
+endif
 # flags required for dependency generation; passed to compilers
 DEPFLAGS = -MT $@ -MD -MP -MF $(DEPDIR)/$*.Td
 

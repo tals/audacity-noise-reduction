@@ -34,6 +34,8 @@
 #include "NoiseReduction.h"
 #include "RealFFTf.h"
 #include "Types.h"
+#include <string.h>
+
 
 const auto OUTPUT_FORMAT = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
 
@@ -120,11 +122,11 @@ struct OutputTrack {
 
     void WriteToDisk(const char *filename) {
         // When opening a file for write, the caller must fill in structure members samplerate, channels, and format.
-        SF_INFO info = {
-            .channels = 1,
-            .format = OUTPUT_FORMAT,
-            .samplerate = this->samplerate,
-         };
+        SF_INFO info = { };
+        info.channels = 1;
+        info.format = OUTPUT_FORMAT;
+        info.samplerate = this->samplerate;
+
         SNDFILE* sf = sf_open(filename, SFM_WRITE, &info);
         assert(sf);
         sf_count_t written = sf_write_float(sf, &data[0], this->length);
@@ -134,11 +136,11 @@ struct OutputTrack {
 };
 
 struct InputTrack {
+    SndContext& ctx;
     int channel;
     size_t t0;
     size_t t1;
     size_t position;
-    SndContext& ctx;
 
     InputTrack(SndContext& ctx, int channel, size_t t0, size_t t1):
        ctx(ctx), channel(channel), t0(t0), t1(t1), position(t0) {
@@ -155,7 +157,7 @@ struct InputTrack {
 
         // can only read full frames from libsnd.
         // will probably be a lot faster to read the whole thing and then split it
-        for (int i = 0; i < length; i++) {
+        for (size_t i = 0; i < length; i++) {
             if (this->position >= t1) {
                 break;
             }
@@ -963,7 +965,7 @@ void NoiseReduction::ProfileNoise(size_t t0, size_t t1) {
         throw std::invalid_argument("Selected noise profile is too short.");
     }
 
-    LOG_F(INFO, "Total Windows: %zd", mStatistics->mTotalWindows);
+    LOG_F(INFO, "Total Windows: %d", (int)mStatistics->mTotalWindows);
 }
 
 void NoiseReduction::ReduceNoise(const char* outputPath) {
@@ -995,11 +997,11 @@ void NoiseReduction::ReduceNoise(const char* outputPath, size_t t0, size_t t1) {
 
     // write samples
     auto channels = mCtx.info.channels;
-    SF_INFO info = {
-        .channels = channels,
-        .format = OUTPUT_FORMAT,
-        .samplerate = mCtx.info.samplerate,
-    };
+    SF_INFO info = { };
+    info.channels = channels;
+    info.format = OUTPUT_FORMAT;
+    info.samplerate = mCtx.info.samplerate;
+
 
     SNDFILE* sf = sf_open(outputPath, SFM_WRITE, &info);
     if (!sf) {
@@ -1016,7 +1018,7 @@ void NoiseReduction::ReduceNoise(const char* outputPath, size_t t0, size_t t1) {
 
     int frames = 0;
 
-    for (int i = 0; i < frameCount; i++) {
+    for (size_t i = 0; i < frameCount; i++) {
         for (int j = 0; j < channels; j++) {
             buffer[frames * channels + j] = outputs[j].data[i];
         }

@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <algorithm>
+#include <string.h>
 
 SndMmap::SndMmap(const char* path) {
     struct stat st;
@@ -58,26 +59,24 @@ SndMmap::SndMmap(const char* path) {
 }
 
 SndContext SndMmap::Open() {
-    SF_INFO info = { 0 };
+    SF_INFO info = { };
     auto snd = sf_open_virtual(&this->interface, SFM_READ, &info, this);
-    SndContext ctx = {
-        .file = snd,
-        .info = info,
-    };
+    SndContext ctx = {};
+    ctx.file = snd;
+    ctx.info = info;
 
     return ctx;
 }
 
 SndContext openAudioFile(const char* path) {
-    SF_INFO info = { 0 };
+    SF_INFO info = { };
     // SNDFILE* snd = sf_open(path, SFM_READ, &info);
     SndMmap* mmaped = new SndMmap(path);
     auto snd = sf_open_virtual(&mmaped->interface, SFM_READ, &info, mmaped);
     assert(snd);
-    SndContext ctx = {
-        .file = snd,
-        .info = info,
-    };
+    SndContext ctx = { };
+    ctx.file = snd;
+    ctx.info = info;
 
     return ctx;
 }

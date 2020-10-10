@@ -7,10 +7,13 @@ $(shell mkdir -p $(BINDIR) >/dev/null)
 
 # source files
 SRCS := \
-    noisereduction/NoiseReduction.cpp \
     noisereduction/Utils.cpp \
     noisereduction/RealFFTf.cpp \
-    noisereduction/Extensions.cpp
+    noisereduction/Extensions.cpp \
+    noisereduction/NoiseReduction.cpp \
+    noisereduction/InputTrack.cpp \
+    noisereduction/OutputTrack.cpp \
+    noisereduction/TrackUtils.cpp
 
 TEST_SRCS := \
     noisereduction/tests/test_main.cpp \
@@ -48,9 +51,9 @@ LD := clang++
 TAR := tar
 
 # C flags
-CFLAGS := -std=c11
+CFLAGS := -std=c14
 # C++ flags
-CXXFLAGS := -std=c++11
+CXXFLAGS := -std=c++14
 # C/C++ flags
 CPPFLAGS := -Wall -Wextra -pedantic
 # linker flags

@@ -7,9 +7,11 @@
 **********************************************************************/
 #pragma once
 
-#include <sndfile.h>
 #include <memory>
 #include "Utils.h"
+#include "InputTrack.h"
+#include "OutputTrack.h"
+
 #define DB_TO_LINEAR(x) (pow(10.0, (x) / 20.0))
 #define LINEAR_TO_DB(x) (20.0 * log10(x))
 
@@ -44,14 +46,12 @@ public:
         int        mMethod;
     };
 
-    NoiseReduction(NoiseReduction::Settings& settings, SndContext& ctx);
+    NoiseReduction(NoiseReduction::Settings& settings, double sampleRate);
     ~NoiseReduction();
-    void ProfileNoise(size_t t0, size_t t1);
-    void ReduceNoise(const char* outputPath, size_t t0, size_t t1);
-    void ReduceNoise(const char* outputPath);
+    void ProfileNoise(InputTrack& profileTrack);
+    void ReduceNoise(InputTrack& inputTrack, OutputTrack &outputTrack);
 private:
     std::unique_ptr<Statistics> mStatistics;
     NoiseReduction::Settings mSettings;
-    SndContext& mCtx;
-
+    double mSampleRate;
 };

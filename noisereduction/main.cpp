@@ -1,6 +1,8 @@
 #include <iostream>
 #include "NoiseReduction.h"
-#include <sndfile.h>
+#include "InputTrack.h"
+#include "OutputTrack.h"
+#include "TrackUtils.h"
 #include "loguru.hpp"
 #include "Utils.h"
 #include "cxxopts.hpp"
@@ -37,16 +39,17 @@ int main(int argc, char * argv[]) {
 
     std::cout << "Processing " << result["input"].as<std::string>() << " -> " << result["output"].as<std::string>() << std::endl;
 
-    auto ctx = openAudioFile(result["input"].as<std::string>().c_str());
+    SndContext ctx = openAudioFile(result["input"].as<std::string>().c_str());
 
     NoiseReduction::Settings settings;
     settings.mNewSensitivity = result["sensitivity"].as<float>();
     settings.mFreqSmoothingBands = result["smoothing"].as<int>();
     settings.mNoiseGain = result["noiseGain"].as<float>();
-    NoiseReduction reduction(settings, ctx);
-    auto t0 = 0;
-    auto t1 = ctx.info.frames;
 
+    NoiseReduction reduction(settings, ctx.info.samplerate);
+
+    size_t t0 = 0;
+    size_t t1 = ctx.info.frames;
     if (result["t0"].count()) {
         t0 = result["t0"].as<size_t>();
     }
@@ -56,10 +59,22 @@ int main(int argc, char * argv[]) {
     }
 
     std::cout << "Profiling noise..." << std::endl;
-    reduction.ProfileNoise(t0, t1);
-    std::cout << "Denoising..." << std::endl;
-    reduction.ReduceNoise(result["output"].as<std::string>().c_str());
+    std::vector<InputTrack> profileTracks = TrackUtils::readTracksFromContext(ctx, t0, t1);
+    for (auto& profileTrack : profileTracks) {
+        reduction.ProfileNoise(profileTrack);
+    }
 
+    std::cout << "Denoising..." << std::endl;
+    std::vector<InputTrack> inputTracks = TrackUtils::readTracksFromContext(ctx);
+    std::vector<OutputTrack> outputTracks;
+    for (auto& inputTrack : inputTracks) {
+        OutputTrack outputTrack;
+        reduction.ReduceNoise(inputTrack, outputTrack);
+        outputTracks.push_back(outputTrack);
+    }
+    
+    const char* outputPath = result["output"].as<std::string>().c_str();
+    TrackUtils::writeTracksToFile(outputPath, outputTracks, ctx.info.channels, ctx.info.samplerate);
 
     return 0;
 }

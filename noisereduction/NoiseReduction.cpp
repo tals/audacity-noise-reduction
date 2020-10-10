@@ -28,16 +28,11 @@
 #include "NoiseReduction.h"
 #include <math.h>
 #include <assert.h>
-#include <sndfile.h>
 #include <exception>
 #include "loguru.hpp"
-#include "NoiseReduction.h"
 #include "RealFFTf.h"
 #include "Types.h"
 #include <string.h>
-
-
-const auto OUTPUT_FORMAT = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
 
 enum DiscriminationMethod {
     DM_MEDIAN,
@@ -90,92 +85,10 @@ enum {
     DEFAULT_STEPS_PER_WINDOW_CHOICE = 1 // corresponds to 4, minimum for WT_HANN_HANN
 };
 
-enum  NoiseReductionChoice {
+enum NoiseReductionChoice {
     NRC_REDUCE_NOISE,
     NRC_ISOLATE_NOISE,
     NRC_LEAVE_RESIDUE,
-};
-
-/**
- * Simple track interface
- */
-struct OutputTrack {
-    FloatVector data;
-    int channel;
-    int samplerate;
-    size_t length;
-
-    OutputTrack(int channel, int samplerate):
-        channel(channel), samplerate(samplerate), length(0) {
-    }
-
-    void Append(float* buffer, size_t count) {
-        length += count;
-        LOG_F(9, "[Channel %d] Appending %zd samples (%zd total)", this->channel, count, this->length);
-        data.insert(data.end(), buffer, &buffer[count]);
-    }
-
-    void SetEnd(size_t newLength) {
-        assert(newLength <= this->length);
-        this->length = newLength;
-    }
-
-    void WriteToDisk(const char *filename) {
-        // When opening a file for write, the caller must fill in structure members samplerate, channels, and format.
-        SF_INFO info = { };
-        info.channels = 1;
-        info.format = OUTPUT_FORMAT;
-        info.samplerate = this->samplerate;
-
-        SNDFILE* sf = sf_open(filename, SFM_WRITE, &info);
-        assert(sf);
-        sf_count_t written = sf_write_float(sf, &data[0], this->length);
-        assert(written > 0);
-        sf_close(sf);
-    }
-};
-
-struct InputTrack {
-    SndContext& ctx;
-    int channel;
-    size_t t0;
-    size_t t1;
-    size_t position;
-
-    InputTrack(SndContext& ctx, int channel, size_t t0, size_t t1):
-       ctx(ctx), channel(channel), t0(t0), t1(t1), position(t0) {
-        sf_seek(ctx.file, t0, SEEK_SET);
-    }
-
-    size_t length() {
-        return t1 - t0;
-    }
-
-    size_t Read(float* buffer, size_t length) {
-        float* writePos = buffer;
-        size_t totalRead = 0;
-
-        // can only read full frames from libsnd.
-        // will probably be a lot faster to read the whole thing and then split it
-        for (size_t i = 0; i < length; i++) {
-            if (this->position >= t1) {
-                break;
-            }
-
-            float buffer[this->ctx.info.channels];
-            size_t read = sf_readf_float(this->ctx.file, buffer, 1);
-            this->position += read;
-            if (read == 0) {
-                break;
-            }
-
-            *writePos = buffer[this->channel];
-            writePos++;
-            totalRead += read;
-        }
-
-        return totalRead;
-    }
 };
 
 class Statistics
@@ -906,7 +819,7 @@ bool NoiseReductionWorker::ProcessOne(Statistics &statistics, InputTrack& inputT
 
     bool bLoopSuccess = true;
 
-    for (size_t i = 0; i < inputTrack.length();) {
+    for (size_t i = 0; i < inputTrack.Length();) {
         size_t len = inputTrack.Read(&buffer[0], BUFFER_SIZE);
 
         if (len == 0) {
@@ -928,7 +841,7 @@ bool NoiseReductionWorker::ProcessOne(Statistics &statistics, InputTrack& inputT
 
    if (bLoopSuccess && !mDoProfile) {
       // Filtering effects always end up with more data than they started with.  Delete this 'tail'.
-       outputTrack->SetEnd(inputTrack.length());
+       outputTrack->SetEnd(inputTrack.Length());
    }
 
     return bLoopSuccess;
@@ -936,28 +849,28 @@ bool NoiseReductionWorker::ProcessOne(Statistics &statistics, InputTrack& inputT
 
 
 
-NoiseReduction::NoiseReduction(NoiseReduction::Settings& settings, SndContext& ctx) :
+NoiseReduction::NoiseReduction(NoiseReduction::Settings& settings, double sampleRate) :
     mSettings(settings),
-    mCtx(ctx)
+    mSampleRate(sampleRate)
 {
     size_t spectrumSize = 1 + mSettings.WindowSize() / 2;
-    mStatistics.reset(new Statistics(spectrumSize, mCtx.info.samplerate, mSettings.mWindowTypes));
+    mStatistics.reset(new Statistics(spectrumSize, mSampleRate, mSettings.mWindowTypes));
 }
 
+// found out why destructor is important:
+// otherwise error with unique_ptr because Statistics is incomplete type
+// also important to define destructor here, not directly in header, because Statistics needs to be defined
 NoiseReduction::~NoiseReduction() = default;
 
-void NoiseReduction::ProfileNoise(size_t t0, size_t t1) {
-    LOG_SCOPE_F(INFO, "Profiling noise for {%zd, %zd}", t0, t1);
+void NoiseReduction::ProfileNoise(InputTrack &profileTrack) {
+    LOG_SCOPE_F(INFO, "Profiling noise");
 
     NoiseReduction::Settings profileSettings(mSettings);
     profileSettings.mDoProfile = true;
-    NoiseReductionWorker profileWorker(profileSettings, mCtx.info.samplerate);
+    NoiseReductionWorker profileWorker(profileSettings, mSampleRate);
 
-    for (int i = 0; i < this->mCtx.info.channels; i++) {
-        InputTrack inputTrack(this->mCtx, i, t0, t1);
-        if (!profileWorker.ProcessOne(*this->mStatistics, inputTrack, nullptr)) {
-            throw std::runtime_error("Cannot process channel");
-        }
+    if (!profileWorker.ProcessOne(*this->mStatistics, profileTrack, nullptr)) {
+        throw std::runtime_error("Cannot process track");
     }
 
     if (this->mStatistics->mTotalWindows == 0) {
@@ -968,76 +881,16 @@ void NoiseReduction::ProfileNoise(size_t t0, size_t t1) {
     LOG_F(INFO, "Total Windows: %d", (int)mStatistics->mTotalWindows);
 }
 
-void NoiseReduction::ReduceNoise(const char* outputPath) {
-    return this->ReduceNoise(outputPath, 0, (size_t)mCtx.info.frames);
+void NoiseReduction::ReduceNoise(InputTrack &inputTrack, OutputTrack &outputTrack) {
+    LOG_SCOPE_F(INFO, "Reducing noise");
 
-}
-
-void NoiseReduction::ReduceNoise(const char* outputPath, size_t t0, size_t t1) {
-    LOG_SCOPE_F(INFO, "Reducing noise for {%zd, %zd}", t0, t1);
     NoiseReduction::Settings cleanSettings(mSettings);
     cleanSettings.mDoProfile = false;
-    NoiseReductionWorker cleanWorker(cleanSettings, mCtx.info.samplerate);
+    NoiseReductionWorker cleanWorker(cleanSettings, mSampleRate);
 
-    // process all channels
-    std::vector<OutputTrack> outputs;
-    for (int i = 0; i < this->mCtx.info.channels; i++) {
-        LOG_F(INFO, "Denoising channel %d", i);
-
-        // create IO tracks
-        InputTrack inputTrack(this->mCtx, i, t0, t1);
-        outputs.emplace_back(i, this->mCtx.info.samplerate);
-
-        // process channel
-        if (!cleanWorker.ProcessOne(*this->mStatistics, inputTrack, &outputs.back())) {
-            throw std::runtime_error("Cannot process channel");
-        }
+    if (!cleanWorker.ProcessOne(*this->mStatistics, inputTrack, &outputTrack)) {
+        throw std::runtime_error("Cannot process track");
     }
-
-
-    // write samples
-    auto channels = mCtx.info.channels;
-    SF_INFO info = { };
-    info.channels = channels;
-    info.format = OUTPUT_FORMAT;
-    info.samplerate = mCtx.info.samplerate;
-
-
-    SNDFILE* sf = sf_open(outputPath, SFM_WRITE, &info);
-    if (!sf) {
-        throw std::runtime_error("Cannot open output file");
-    }
-
-    auto frameCount = outputs[0].length;
-    LOG_F(INFO, "Writing %zd frames to disk", frameCount);
-
-    // copy audio to buffer so that channels are interleaved
-    const size_t bufferFrames = 1024;
-    const size_t bufferSize = channels * bufferFrames;
-    auto buffer = std::make_unique<float[]>(bufferSize);
-
-    int frames = 0;
-
-    for (size_t i = 0; i < frameCount; i++) {
-        for (int j = 0; j < channels; j++) {
-            buffer[frames * channels + j] = outputs[j].data[i];
-        }
-
-        frames++;
-        if (frames == bufferFrames) {
-            sf_count_t written = sf_writef_float(sf, buffer.get(), bufferFrames);
-            assert(written > 0);
-            frames = 0;
-        }
-    }
-
-    // write remaining frames left in buffer
-    if (frames > 0) {
-        sf_count_t written = sf_writef_float(sf, buffer.get(), frames);
-        assert(written > 0);
-    }
-
-    sf_close(sf);
 }
 
 NoiseReduction::Settings::Settings() {
@@ -1055,6 +908,4 @@ NoiseReduction::Settings::Settings() {
     mAttackTime = 0.02;
     mReleaseTime = 0.10;
     mFreqSmoothingBands = 0;
-
-
 }

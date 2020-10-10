@@ -1,0 +1,9 @@
+#!/bin/sh
+input=./square-with-noise-stereo.wav
+output=./square-with-noise-stereo-output.wav
+t0=0
+t1=44100
+gain=24
+sensitivity=12
+smoothing=0
+../bin/noisereduction_driver -i $input -o $output --t0 $t0 --t1 $t1 --noiseGain $gain --sensitivity $sensitivity --smoothing $smoothing

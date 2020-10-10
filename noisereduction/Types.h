@@ -46,6 +46,8 @@ typedef std::vector<float> FloatVector;
 
 #include <algorithm>
 
+#include <assert.h>
+
 // ----------------------------------------------------------------------------
 // TODO:  I'd imagine this header may be replaced by other public headers. But,
 //        to try and minimize more changes to the base code, we can use this

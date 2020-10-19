@@ -110,7 +110,7 @@ driver:
 	$(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) $(OBJS) noisereduction/main.cpp -o $(BIN)
 
 .PHONY: check
-test:
+test: $(OBJS)
 	$(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(TEST_SRCS) -o bin/test_runner
 	cd samples && ../bin/test_runner
 

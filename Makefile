@@ -51,9 +51,9 @@ LD := clang++
 TAR := tar
 
 # C flags
-CFLAGS := -std=c14
+CFLAGS := -std=c99
 # C++ flags
-CXXFLAGS := -std=c++14
+CXXFLAGS := -std=c++11
 # C/C++ flags
 CPPFLAGS := -Wall -Wextra -pedantic
 # linker flags

@@ -1,6 +1,7 @@
 #include "TrackUtils.h"
 #include "loguru.hpp"
 #include <memory>
+#include "MemoryX.h"
 
 std::vector<InputTrack> TrackUtils::readTracksFromContext(const SndContext& ctx, size_t t0/* = 0*/, size_t t1/* = 0*/)
 {
@@ -23,7 +24,7 @@ InputTrack TrackUtils::readOneTrackFromContext(const SndContext &ctx, int channe
 
     const size_t frameCount = t1 - t0;
     FloatVector buffer(frameCount);
-    
+
     sf_seek(ctx.file, t0, SEEK_SET);
     float* writePtr = &buffer[0];
 

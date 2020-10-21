@@ -22,6 +22,9 @@ DerivedData/
 *.perspectivev3
 !default.perspectivev3
 
+## Visual Studio Code
+noisereduction/.vscode
+
 bin/
 .o/
 .d/

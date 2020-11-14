@@ -8,7 +8,7 @@
 
 #include <stdio.h>
 #include <sndfile.h>
-#include <string>
+#include <cstring>
 #include <unistd.h>
 #include <cmath>
 

@@ -5,4 +5,4 @@ profile=./noise-profile.wav
 gain=24
 sensitivity=12
 smoothing=0
-../../../bin/noisereduction_driver -i $input -o $output -p $profile --noiseGain $gain --sensitivity $sensitivity --smoothing $smoothing
+../../../build/noisereduction_driver -i $input -o $output -p $profile --noiseGain $gain --sensitivity $sensitivity --smoothing $smoothing

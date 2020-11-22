@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <sndfile.h>
 #include <string>
-#include <unistd.h>
 #include <cmath>
 
 #include "catch.hpp"

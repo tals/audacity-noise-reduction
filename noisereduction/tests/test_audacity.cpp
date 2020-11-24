@@ -9,13 +9,11 @@
 #include <stdio.h>
 #include <sndfile.h>
 #include <string>
-#include <unistd.h>
 #include <cmath>
 
 #include "catch.hpp"
-#include "../TrackUtils.h"
-#include "../Utils.h"
 #include "../NoiseReduction.h"
+#include "../TrackUtils.h"
 
 std::vector<float> readContext(SndContext& ctx) {
     auto size = ctx.info.frames * ctx.info.channels;
@@ -27,8 +25,8 @@ std::vector<float> readContext(SndContext& ctx) {
 }
 
 void compare(const char* inputPath, const char* groundTruthPath) {
-    SndContext inputCtx = openAudioFile(inputPath);
-    SndContext groundTruthCtx = openAudioFile(groundTruthPath);
+    SndContext inputCtx = TrackUtils::openAudioFile(inputPath);
+    SndContext groundTruthCtx = TrackUtils::openAudioFile(groundTruthPath);
 
     NoiseReduction::Settings settings;
     settings.mNewSensitivity = 16;
@@ -54,7 +52,7 @@ void compare(const char* inputPath, const char* groundTruthPath) {
 
     TrackUtils::writeTracksToFile("/tmp/processed.wav", outputTracks, inputCtx.info.channels, inputCtx.info.samplerate);
 
-    SndContext processedCtx = openAudioFile("/tmp/processed.wav");
+    SndContext processedCtx = TrackUtils::openAudioFile("/tmp/processed.wav");
     REQUIRE(processedCtx.info.frames == groundTruthCtx.info.frames);
     REQUIRE(processedCtx.info.channels == groundTruthCtx.info.channels);
 

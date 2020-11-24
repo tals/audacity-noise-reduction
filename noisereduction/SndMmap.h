@@ -1,12 +1,6 @@
 #pragma once
 
-#include <sndfile.h>
-#include <assert.h>
-
-struct SndContext {
-    SNDFILE *file;
-    SF_INFO info;
-};
+#include "SndContext.h"
 
 class SndMmap {
     sf_count_t length;
@@ -18,5 +12,3 @@ public:
     SndMmap(const char* path);
     SndContext Open();
 };
-
-SndContext openAudioFile(const char* path);

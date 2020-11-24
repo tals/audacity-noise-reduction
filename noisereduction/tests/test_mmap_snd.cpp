@@ -13,8 +13,9 @@
 #include <cmath>
 
 #include "catch.hpp"
-#include "../Utils.h"
 #include "../NoiseReduction.h"
+#include "../SndContext.h"
+#include "../SndMmap.h"
 
 SndContext openAudioFileRawIO(const char* path) {
     SF_INFO info = { };

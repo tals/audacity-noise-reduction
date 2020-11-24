@@ -1,7 +1,33 @@
 #include "TrackUtils.h"
-#include "loguru.hpp"
+
 #include <memory>
+#include <stdexcept>
+
 #include "MemoryX.h"
+#include "loguru.hpp"
+
+#define WINDOWS (defined(WIN32) || defined(_WIN32) || defined(__WIN32))
+#ifndef WINDOWS
+// no mmap support for Windows
+#include "SndMmap.h"
+#endif
+
+SndContext TrackUtils::openAudioFile(const char* path) {
+    SF_INFO info = {};
+#ifdef WINDOWS
+    // no mmap support for Windows, so fall back to simple solution
+    SNDFILE* snd = sf_open(path, SFM_READ, &info);
+#else
+    SndMmap* mmaped = new SndMmap(path);
+    SNDFILE* snd = sf_open_virtual(&mmaped->interface, SFM_READ, &info, mmaped);
+#endif
+    assert(snd);
+    SndContext ctx = {};
+    ctx.file = snd;
+    ctx.info = info;
+
+    return ctx;
+}
 
 std::vector<InputTrack> TrackUtils::readTracksFromContext(const SndContext& ctx, size_t t0/* = 0*/, size_t t1/* = 0*/)
 {
@@ -28,11 +54,12 @@ InputTrack TrackUtils::readOneTrackFromContext(const SndContext &ctx, int channe
     sf_seek(ctx.file, t0, SEEK_SET);
     float* writePtr = &buffer[0];
 
+    auto frameBuffer = std::make_unique<float[]>(ctx.info.channels);
+
     // can only read full frames from libsnd.
     // will probably be a lot faster to read the whole thing and then split it
     for (size_t frame = t0; frame < t1; frame++) {
-        float frameBuffer[ctx.info.channels];
-        size_t read = sf_readf_float(ctx.file, frameBuffer, 1);
+        size_t read = sf_readf_float(ctx.file, frameBuffer.get(), 1);
 
         if (read == 0) {
             LOG_F(WARNING, "Couldn't read data from input file");

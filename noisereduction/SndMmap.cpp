@@ -1,13 +1,14 @@
-#include "Utils.h"
+#include "SndMmap.h"
+
 #include <assert.h>
-#include <sndfile.h>
+#include <algorithm>
+#include <string.h>
+
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <algorithm>
-#include <string.h>
 
 SndMmap::SndMmap(const char* path) {
     struct stat st;
@@ -19,28 +20,28 @@ SndMmap::SndMmap(const char* path) {
     assert(this->mmappedData);
     this->position = 0;
 
-    interface.get_filelen = [](void * user_data) -> sf_count_t {
+    interface.get_filelen = [](void* user_data) -> sf_count_t {
         SndMmap* self = static_cast<SndMmap*>(user_data);
         return self->length;
     };
 
-    interface.tell = [](void *user_data) -> sf_count_t {
+    interface.tell = [](void* user_data) -> sf_count_t {
         SndMmap* self = static_cast<SndMmap*>(user_data);
         return self->position;
     };
 
-    interface.seek = [](sf_count_t offset, int whence, void *user_data) -> sf_count_t {
+    interface.seek = [](sf_count_t offset, int whence, void* user_data) -> sf_count_t {
         SndMmap* self = static_cast<SndMmap*>(user_data);
-        switch(whence) {
-            case SEEK_SET:
-                self->position = offset;
-                break;
-            case SEEK_CUR:
-                self->position += offset;
-                break;
-            case SEEK_END:
-                self->position = self->length - offset;
-                break;
+        switch (whence) {
+        case SEEK_SET:
+            self->position = offset;
+            break;
+        case SEEK_CUR:
+            self->position += offset;
+            break;
+        case SEEK_END:
+            self->position = self->length - offset;
+            break;
         }
 
         self->position = std::max<sf_count_t>(self->position, 0);
@@ -48,7 +49,7 @@ SndMmap::SndMmap(const char* path) {
         return self->position;
     };
 
-    interface.read = [](void *ptr, sf_count_t count, void *user_data) -> sf_count_t {
+    interface.read = [](void* ptr, sf_count_t count, void* user_data) -> sf_count_t {
         SndMmap* self = static_cast<SndMmap*>(user_data);
 
         auto len = std::min(count, self->length - self->position);
@@ -59,26 +60,11 @@ SndMmap::SndMmap(const char* path) {
 }
 
 SndContext SndMmap::Open() {
-    SF_INFO info = { };
-    auto snd = sf_open_virtual(&this->interface, SFM_READ, &info, this);
+    SF_INFO info = {};
+    SNDFILE* snd = sf_open_virtual(&this->interface, SFM_READ, &info, this);
     SndContext ctx = {};
     ctx.file = snd;
     ctx.info = info;
 
     return ctx;
 }
-
-SndContext openAudioFile(const char* path) {
-    SF_INFO info = { };
-    // SNDFILE* snd = sf_open(path, SFM_READ, &info);
-    SndMmap* mmaped = new SndMmap(path);
-    auto snd = sf_open_virtual(&mmaped->interface, SFM_READ, &info, mmaped);
-    assert(snd);
-    SndContext ctx = { };
-    ctx.file = snd;
-    ctx.info = info;
-
-    return ctx;
-}
-
-

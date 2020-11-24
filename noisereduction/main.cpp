@@ -4,7 +4,6 @@
 #include "OutputTrack.h"
 #include "TrackUtils.h"
 #include "loguru.hpp"
-#include "Utils.h"
 #include "cxxopts.hpp"
 
 int main(int argc, char * argv[]) {
@@ -40,7 +39,7 @@ int main(int argc, char * argv[]) {
 
     std::cout << "Processing " << result["input"].as<std::string>() << " -> " << result["output"].as<std::string>() << std::endl;
 
-    SndContext inputCtx = openAudioFile(result["input"].as<std::string>().c_str());
+    SndContext inputCtx = TrackUtils::openAudioFile(result["input"].as<std::string>().c_str());
 
     NoiseReduction::Settings settings;
     settings.mNewSensitivity = result["sensitivity"].as<float>();
@@ -55,7 +54,7 @@ int main(int argc, char * argv[]) {
 
     if (result.count("profile")) {
         // use separate track for profiling noise
-        SndContext profileCtx = openAudioFile(result["profile"].as<std::string>().c_str());
+        SndContext profileCtx = TrackUtils::openAudioFile(result["profile"].as<std::string>().c_str());
         profileTracks = TrackUtils::readTracksFromContext(profileCtx);
     } else {
         // use time indices for profiling noise

@@ -26,13 +26,18 @@
 *//****************************************************************//**
 */
 #include "NoiseReduction.h"
+#define _USE_MATH_DEFINES   // required for msvc to define M_PI
 #include <math.h>
 #include <assert.h>
 #include <exception>
+#include <string.h>
+#include <stdexcept>
+
+#include <sndfile.h>
+
 #include "loguru.hpp"
 #include "RealFFTf.h"
 #include "Types.h"
-#include <string.h>
 
 enum DiscriminationMethod {
     DM_MEDIAN,

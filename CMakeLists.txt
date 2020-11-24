@@ -25,10 +25,13 @@ set(CORE_SRC_FILES
     noisereduction/InputTrack.cpp
     noisereduction/OutputTrack.cpp
     noisereduction/TrackUtils.cpp
-	noisereduction/Utils.cpp
     noisereduction/RealFFTf.cpp
     noisereduction/Extensions.cpp
 )
+if(NOT WIN32)
+	# mmap not supported for Windows
+	list(APPEND CORE_SRC_FILES noisereduction/SndMmap.cpp)
+endif()
 
 # Add headers as well so they are listed in Visual Studio
 set(CORE_HEADER_FILES
@@ -36,13 +39,17 @@ set(CORE_HEADER_FILES
 	noisereduction/InputTrack.h
 	noisereduction/OutputTrack.h
 	noisereduction/TrackUtils.h
-	noisereduction/Utils.h
+	noisereduction/SndContext.h
 	noisereduction/RealFFTf.h
 	noisereduction/Types.h
 	noisereduction/MemoryX.h
 	noisereduction/cxxopts.hpp
 	noisereduction/loguru.hpp	
 )
+if(NOT WIN32)
+	# mmap not supported for Windows
+	list(APPEND CORE_HEADER_FILES noisereduction/SndMmap.h)
+endif()
 	
 add_library(noisereduction_core STATIC ${CORE_SRC_FILES} ${CORE_HEADER_FILES})
 

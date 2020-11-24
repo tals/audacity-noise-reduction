@@ -30,11 +30,14 @@
 #include <math.h>
 #include <assert.h>
 #include <exception>
+#include <string.h>
+#include <stdexcept>
+
+#include <sndfile.h>
+
 #include "loguru.hpp"
 #include "RealFFTf.h"
 #include "Types.h"
-#include <string.h>
-#include <stdexcept>
 
 enum DiscriminationMethod {
     DM_MEDIAN,

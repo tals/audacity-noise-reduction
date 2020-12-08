@@ -111,6 +111,19 @@ if(USE_MMAP)
     list(APPEND TEST_SRC_FILES noisereduction/tests/test_mmap_snd.cpp)
 endif()
 
-add_executable(test_runner ${TEST_SRC_FILES})
+# Add headers as well so they are listed in Visual Studio
+set(TEST_HEADER_FILES
+	noisereduction/tests/catch.hpp
+)
+
+add_executable(test_runner ${TEST_SRC_FILES} ${TEST_HEADER_FILES})
+
+# Define samples directory relative to executable
+if(MSVC)
+	# two levels up because MSVC puts exe under build/Debug
+	target_compile_definitions(test_runner PRIVATE SAMPLES_DIR="../../samples")
+else()
+	target_compile_definitions(test_runner PRIVATE SAMPLES_DIR="../samples")
+endif()
 
 target_link_libraries(test_runner PRIVATE noisereduction_core)

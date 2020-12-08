@@ -44,9 +44,9 @@ void checkRead(SndContext& mmapCtx, SndContext& rawCtx, size_t frames, size_t bu
 
 TEST_CASE( "MMapped SND", "[MmapSnd]" ) {
     SECTION("Reading everything in one go") {
-        SndMmap sndMmaped("dtmf-noise-mono.wav");
+        SndMmap sndMmaped(SAMPLES_DIR "/dtmf-noise-mono.wav");
         SndContext mmapCtx = sndMmaped.Open();
-        SndContext rawCtx = openAudioFileRawIO("dtmf-noise-mono.wav");
+        SndContext rawCtx = openAudioFileRawIO(SAMPLES_DIR "/dtmf-noise-mono.wav");
 
         REQUIRE(mmapCtx.file);
         REQUIRE(rawCtx.file);
@@ -55,9 +55,9 @@ TEST_CASE( "MMapped SND", "[MmapSnd]" ) {
     }
 
     SECTION("Seeking") {
-        SndMmap sndMmaped("dtmf-noise-mono.wav");
+        SndMmap sndMmaped(SAMPLES_DIR "/dtmf-noise-mono.wav");
         SndContext mmapCtx = sndMmaped.Open();
-        SndContext rawCtx = openAudioFileRawIO("dtmf-noise-mono.wav");
+        SndContext rawCtx = openAudioFileRawIO(SAMPLES_DIR "/dtmf-noise-mono.wav");
 
         REQUIRE(mmapCtx.file);
         REQUIRE(rawCtx.file);
@@ -70,9 +70,9 @@ TEST_CASE( "MMapped SND", "[MmapSnd]" ) {
     }
 
     SECTION("Read batches") {
-        SndMmap sndMmaped("dtmf-noise-mono.wav");
+        SndMmap sndMmaped(SAMPLES_DIR "/dtmf-noise-mono.wav");
         SndContext mmapCtx = sndMmaped.Open();
-        SndContext rawCtx = openAudioFileRawIO("dtmf-noise-mono.wav");
+        SndContext rawCtx = openAudioFileRawIO(SAMPLES_DIR "/dtmf-noise-mono.wav");
 
         REQUIRE(mmapCtx.file);
         REQUIRE(rawCtx.file);

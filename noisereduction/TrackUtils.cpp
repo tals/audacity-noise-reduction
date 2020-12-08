@@ -6,20 +6,18 @@
 #include "MemoryX.h"
 #include "loguru.hpp"
 
-#define WINDOWS (defined(WIN32) || defined(_WIN32) || defined(__WIN32))
-#ifndef WINDOWS
-// no mmap support for Windows
+#ifdef USE_MMAP
 #include "SndMmap.h"
 #endif
 
 SndContext TrackUtils::openAudioFile(const char* path) {
     SF_INFO info = {};
-#ifdef WINDOWS
-    // no mmap support for Windows, so fall back to simple solution
-    SNDFILE* snd = sf_open(path, SFM_READ, &info);
-#else
+#ifdef USE_MMAP
     SndMmap* mmaped = new SndMmap(path);
     SNDFILE* snd = sf_open_virtual(&mmaped->interface, SFM_READ, &info, mmaped);
+#else
+    // no mmap support, so fall back to simple solution
+    SNDFILE* snd = sf_open(path, SFM_READ, &info);
 #endif
     assert(snd);
     SndContext ctx = {};

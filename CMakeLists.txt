@@ -1,9 +1,15 @@
 cmake_minimum_required(VERSION 3.1)
 
 if(NOT WIN32)
-	# do not use clang on Windows, will use MSVC anyway with default Visual Studio generator, even if clang is specified
+	# do not use clang on Windows,
+	# will use MSVC anyway with default Visual Studio generator, even if clang is specified
 	set(CMAKE_C_COMPILER clang)
 	set(CMAKE_CXX_COMPILER clang++)
+endif()
+
+if(NOT WIN32)
+	# mmap not supported for Windows
+	set(USE_MMAP TRUE)
 endif()
 
 project(AudacityNoiseReduction VERSION 1.0.0)
@@ -28,8 +34,7 @@ set(CORE_SRC_FILES
     noisereduction/RealFFTf.cpp
     noisereduction/Extensions.cpp
 )
-if(NOT WIN32)
-	# mmap not supported for Windows
+if(USE_MMAP)
 	list(APPEND CORE_SRC_FILES noisereduction/SndMmap.cpp)
 endif()
 
@@ -46,12 +51,15 @@ set(CORE_HEADER_FILES
 	noisereduction/cxxopts.hpp
 	noisereduction/loguru.hpp	
 )
-if(NOT WIN32)
-	# mmap not supported for Windows
+if(USE_MMAP)
 	list(APPEND CORE_HEADER_FILES noisereduction/SndMmap.h)
 endif()
 	
 add_library(noisereduction_core STATIC ${CORE_SRC_FILES} ${CORE_HEADER_FILES})
+
+if(USE_MMAP)
+	target_compile_definitions(noisereduction_core PUBLIC USE_MMAP)
+endif()
 
 find_package(Threads REQUIRED)
 
@@ -59,7 +67,6 @@ if(WIN32)
 	# default installation dir for libsndfile on Windows
 	set(LIBSNDFILE_DIR "C:\\Program Files\\Mega-Nerd\\libsndfile")
 endif()
-
 
 if(WIN32)
 	# on Windows, need full name of library and path hint to find it
@@ -100,7 +107,7 @@ set(TEST_SRC_FILES
     noisereduction/tests/test_main.cpp
     noisereduction/tests/test_audacity.cpp
 )
-if (NOT WIN32)
+if(USE_MMAP)
     list(APPEND TEST_SRC_FILES noisereduction/tests/test_mmap_snd.cpp)
 endif()
 

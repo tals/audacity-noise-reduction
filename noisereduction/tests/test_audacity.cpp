@@ -50,9 +50,9 @@ void compare(const char* inputPath, const char* groundTruthPath) {
         outputTracks.push_back(outputTrack);
     }
 
-    TrackUtils::writeTracksToFile("/tmp/processed.wav", outputTracks, inputCtx.info.channels, inputCtx.info.samplerate);
+    TrackUtils::writeTracksToFile("./temp/processed.wav", outputTracks, inputCtx.info.channels, inputCtx.info.samplerate);
 
-    SndContext processedCtx = TrackUtils::openAudioFile("/tmp/processed.wav");
+    SndContext processedCtx = TrackUtils::openAudioFile("./temp/processed.wav");
     REQUIRE(processedCtx.info.frames == groundTruthCtx.info.frames);
     REQUIRE(processedCtx.info.channels == groundTruthCtx.info.channels);
 
@@ -70,10 +70,10 @@ void compare(const char* inputPath, const char* groundTruthPath) {
 
 TEST_CASE( "Noise Reduction", "[NoiseReduction]" ) {
     SECTION( "mono track" ) {
-        compare("dtmf-noise-mono.wav", "dtmf-noise-mono-audacity-gain-39-sensitivity-16-smooth-0.wav");
+        compare(SAMPLES_DIR "/dtmf-noise-mono.wav", SAMPLES_DIR "/dtmf-noise-mono-audacity-gain-39-sensitivity-16-smooth-0.wav");
     }
 
     SECTION( "stereo track" ) {
-        compare("dtmf-noise-stereo.wav", "dtmf-noise-stereo-audacity-gain-39-sensitivity-16-smooth-0.wav");
+        compare(SAMPLES_DIR "/dtmf-noise-stereo.wav", SAMPLES_DIR "/dtmf-noise-stereo-audacity-gain-39-sensitivity-16-smooth-0.wav");
     }
 }

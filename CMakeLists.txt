@@ -24,6 +24,21 @@ else()
 	add_compile_options(-Wall)
 endif()
 
+if(WIN32)
+	# default installation dir for libsndfile on Windows
+	set(LIBSNDFILE_DIR "C:\\Program Files\\Mega-Nerd\\libsndfile")
+endif()
+
+# Need to copy dll file to build directory on Windows
+if(WIN32)
+	if(MSVC)
+		# MSVC creates separate Debug directory, not sure about other compilers on Windows
+		file(COPY "${LIBSNDFILE_DIR}\\bin\\libsndfile-1.dll" DESTINATION ".\\Debug")
+	else()
+		file(COPY "${LIBSNDFILE_DIR}\\bin\\libsndfile-1.dll" DESTINATION ".")
+	endif()
+endif()
+
 ################################################################################
 # Create core library
 set(CORE_SRC_FILES
@@ -62,11 +77,6 @@ if(USE_MMAP)
 endif()
 
 find_package(Threads REQUIRED)
-
-if(WIN32)
-	# default installation dir for libsndfile on Windows
-	set(LIBSNDFILE_DIR "C:\\Program Files\\Mega-Nerd\\libsndfile")
-endif()
 
 if(WIN32)
 	# on Windows, need full name of library and path hint to find it

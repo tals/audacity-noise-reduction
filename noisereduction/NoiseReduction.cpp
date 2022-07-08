@@ -33,7 +33,7 @@
 #include <string.h>
 #include <stdexcept>
 
-#include <sndfile.h>
+#include "sndfile.h"
 
 #include "loguru.hpp"
 #include "RealFFTf.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <sndfile.h>
+#include "sndfile.h"
 
 struct SndContext {
     SNDFILE* file;

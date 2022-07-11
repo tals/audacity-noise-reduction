@@ -103,6 +103,11 @@ if(WIN32)
     target_include_directories(noisereduction_core PUBLIC "${LIBSNDFILE_DIR}\\include")
 endif()
 
+if (APPLE)
+	target_include_directories(noisereduction_core PUBLIC /opt/homebrew/include)
+	target_link_directories(noisereduction_core PUBLIC /opt/homebrew/lib)
+endif()
+
 target_link_libraries(noisereduction_core PUBLIC ${CORE_LIBRARIES})
 
 ################################################################################
